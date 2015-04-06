@@ -234,16 +234,20 @@ vmap tr "xy:exe "%s/" . @x . "/" . input("replace all [" . @x . "] by: ") . "/cg
 vmap trw "xy:exe "%s/\\<" . @x . "\\>/" . input("replace all [<" . @x . ">] by: ") . "/cg"<CR>
 vmap tr$ "xy:exe ",$s/" . @x . "/" . input("replace to end [" . @x . "] by: ") . "/cg"<CR>
 
+let g:yuhuiGlobalSearchPath  = "."
 " find word in directories."
 function! SearchWordGlobal(vw, replacedBy)
   let cw ="/" .  a:vw . "/g" 
   let distPath = ""
   if strlen(a:replacedBy) > 0
-    let distPath = input("replace [" . cw . "] >> [" . a:replacedBy . "] in: ", "**/*.h **/*.cpp", "dir")
+    let distPath = input("replace [" . cw . "] >> [" . a:replacedBy . "] in: ",  g:yuhuiGlobalSearchPath, "dir")
   else
-    let distPath = input("search [" . cw . "]: ", "**/*.h **/*.cpp", "dir")
+    let distPath = input("search [" . cw . "]: ",  g:yuhuiGlobalSearchPath, "dir")
   endif
-  exe "noautocmd vimgrep " . cw . " " . distPath . ""
+  let g:yuhuiGlobalSearchPath = distPath
+  let cmdstr =  "noautocmd vimgrep " . cw . " " . distPath . ""
+  echo cmdstr
+  exe cmdstr
   if strlen(a:replacedBy) > 0
     let replaceCount = 1
     for qf in getqflist()
@@ -681,13 +685,13 @@ augroup omnisharp_commands
     " Builds can also run asynchronously with vim-dispatch installed
     autocmd FileType cs nnoremap <leader>b :wa!<cr>:OmniSharpBuildAsync<cr>
     " automatic syntax check on events (TextChanged requires Vim 7.4)
-    autocmd BufEnter,TextChanged,InsertLeave *.cs SyntasticCheck
+    " autocmd BufEnter,TextChanged,InsertLeave *.cs SyntasticCheck
 
     " Automatically add new cs files to the nearest project on save
-    autocmd BufWritePost *.cs call OmniSharp#AddToProject()
+    " autocmd BufWritePost *.cs call OmniSharp#AddToProject()
 
     "show type information automatically when the cursor stops moving
-    autocmd CursorHold *.cs call OmniSharp#TypeLookupWithoutDocumentation()
+    " autocmd CursorHold *.cs call OmniSharp#TypeLookupWithoutDocumentation()
 
     "The following commands are contextual, based on the current cursor position.
 
