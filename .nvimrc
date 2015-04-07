@@ -90,7 +90,9 @@ if has('gui_running')
   colorscheme peachpuff " bandit fine_blue2 	fog wombat
   "set guifont=Monaco\ 9
 else
-  set t_Co=256
+  set t_Co=16
+  set background=light
+  syntax enable
   colo darkblue
   " colo delek
   " murphy		
@@ -231,9 +233,9 @@ autocmd FileType c,cpp,cs map tm :call CommentLine()<CR>
 "
 
 " replace current word.
-vmap tr "xy:exe "%s/" . @x . "/" . input("replace all [" . @x . "] by: ") . "/cg"<CR>
-vmap trw "xy:exe "%s/\\<" . @x . "\\>/" . input("replace all [<" . @x . ">] by: ") . "/cg"<CR>
-vmap tr$ "xy:exe ",$s/" . @x . "/" . input("replace to end [" . @x . "] by: ") . "/cg"<CR>
+vmap <leader>r "xy:exe "%s/" . @x . "/" . input("replace all [" . @x . "] by: ") . "/cg"<CR>
+vmap <leader>rw "xy:exe "%s/\\<" . @x . "\\>/" . input("replace all [<" . @x . ">] by: ") . "/cg"<CR>
+vmap <leader>r$ "xy:exe ",$s/" . @x . "/" . input("replace to end [" . @x . "] by: ") . "/cg"<CR>
 
 let g:yuhuiGlobalSearchPath  = "."
 " find word in directories."
