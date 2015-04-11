@@ -93,6 +93,7 @@ else
   set t_Co=16
   set background=light
   syntax enable
+  colo wolfpack
   colo darkblue
   " colo delek
   " murphy		
@@ -247,10 +248,13 @@ function! SearchWordGlobal(vw, replacedBy)
   else
     let distPath = input("search [" . cw . "]: ",  g:yuhuiGlobalSearchPath, "dir")
   endif
+  if distPath[0] != '.'
+      let distPath = './' . distPath
+  endif
   let g:yuhuiGlobalSearchPath = distPath
-  let cmdstr =  "noautocmd vimgrep " . cw . " " . distPath . ""
-  echo cmdstr
-  exe cmdstr
+  let cmdstr =  ":vimgrep " . cw . " " . distPath . ""
+  echo '[' . cmdstr ']'
+  execute cmdstr
   if strlen(a:replacedBy) > 0
     let replaceCount = 1
     for qf in getqflist()
@@ -645,7 +649,7 @@ nmap <leader>cs :SCROLL<CR>
 let g:OmniSharp_host = "http://localhost:2000"
 
 "Set the type lookup function to use the preview window instead of the status line
-"let g:OmniSharp_typeLookupInPreview = 1
+let g:OmniSharp_typeLookupInPreview = 1
 
 "Timeout in seconds to wait for a response from the server
 let g:OmniSharp_timeout = 1
