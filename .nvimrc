@@ -17,10 +17,13 @@ Plugin 'https://github.com/majutsushi/tagbar.git'
 Plugin 'https://github.com/scrooloose/nerdtree.git'
 Plugin 'https://github.com/vimwiki/vimwiki.git'
 Plugin 'https://github.com/vim-scripts/DoxygenToolkit.vim.git'
+" Plugin 'https://github.com/scrooloose/syntastic.git'
 Plugin 'https://github.com/itchyny/thumbnail.vim.git'
-Plugin 'https://github.com/scrooloose/syntastic.git'
 Plugin 'https://github.com/Valloric/YouCompleteMe.git'
 Plugin 'https://github.com/kien/ctrlp.vim.git'
+Plugin 'http://git.oschina.net/qiuchangjie/ShaderHighLight'
+Plugin 'https://github.com/tpope/vim-fugitive.git'
+Plugin 'https://github.com/davidhalter/jedi-vim.git'
 " Plugin 'https://github.com/ervandew/supertab.git'
 " " The following are examples of different formats supported.
 " " Keep Plugin commands between vundle#begin/end.
@@ -93,10 +96,9 @@ else
   set t_Co=16
   set background=light
   syntax enable
-  colo wolfpack
-  colo darkblue
-  " colo delek
-  " murphy		
+  "colo wolfpack
+  " colo industry
+  colo delek		
   " bandit 
   " color  molokai 
   " color lettuce
@@ -113,10 +115,7 @@ set fileencodings=utf-8     ",gbk,ucs-bom,cp936
 "set termencoding=utf-8,gbk,ucs-bom
 "set encoding=utf-8
 set laststatus=2
-set statusline=%<%F\ %y[buf:%n]%h%m%r%=%-14.(ln:%l,%c%V%)\   
-set statusline+=%{&fenc!=''?&fenc:&enc}\ %r%P\ 
-set statusline+=[%-12{strftime(\"%m-%d\ %H:%M\")}] 
-set updatetime=16000
+set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('%s','','')}\ %=%B@%O\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
 
 """"""""""""""""""""""""""""""""""""""
 "diff 
@@ -206,77 +205,101 @@ function! LoadSession(noConfirm)
 endfunction
 nmap <F4> :call LoadSession(0)<CR>
 
-"Doxygen"
+"Doxygen"{{{
+" nmap <leader>dc :Dox<CR>
 let g:DoxygenToolkit_compactOneLineDoc = "yes"
+let g:DoxygenToolkit_commentType = "C++"
+let g:DoxygenToolkit_briefTag_pre="\\brief " 
+let g:DoxygenToolkit_paramTag_pre="\\param " 
+let g:DoxygenToolkit_returnTag="\\returns " 
+"let g:DoxygenToolkit_blockHeader="--------------------------------------------"
+let g:DoxygenToolkit_blockFooter="" 
 let g:DoxygenToolkit_authorName="yuhuibear@gmail.com" 
 "let g:DoxygenToolkit_licenseTag="private license"   
-""
+""}}}
 
 " comment line."
+let g:commentPrefix = ''
+autocmd BufEnter *.c,cpp,cs let g:commentPrefix = '//'
+autocmd BufEnter *.py let g:commentPrefix = '#'
 function! CommentLine()
-  let commentPrefix = '//'
-  let commentPattern = '^\s*\t*' . commentPrefix
+  let commentPattern = '^\s*\t*' . g:commentPrefix
   let line = getline('.')
   if strlen(substitute(line, "[\s\t]", "", "")) < 1
     return
   endif
   if line =~ commentPattern
-    let idx = stridx(line, commentPrefix[0], 0)
+    let idx = stridx(line, g:commentPrefix[0], 0)
     let newline = strpart(line, 0, idx) 
-    let newline = newline . strpart(line, idx + strlen(commentPrefix), strlen(line) - strlen(commentPrefix))
+    let newline = newline . strpart(line, idx + strlen(g:commentPrefix), strlen(line) - strlen(g:commentPrefix))
     call setline('.', newline)
   else
-    let newline = commentPrefix . line
+    let newline = g:commentPrefix . line
     call setline('.', newline)
   endif
 endfunction
-autocmd FileType c,cpp,cs map tm :call CommentLine()<CR>
+autocmd FileType c,cpp,cs,py map <leader>tm :call CommentLine()<CR>
 "
 
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " replace current word.
 vmap <leader>r "xy:exe "%s/" . @x . "/" . input("replace all [" . @x . "] by: ") . "/cg"<CR>
 vmap <leader>rw "xy:exe "%s/\\<" . @x . "\\>/" . input("replace all [<" . @x . ">] by: ") . "/cg"<CR>
 vmap <leader>r$ "xy:exe ",$s/" . @x . "/" . input("replace to end [" . @x . "] by: ") . "/cg"<CR>
-
-let g:yuhuiGlobalSearchPath  = "."
-" find word in directories."
-function! SearchWordGlobal(vw, replacedBy)
-  let cw ="/" .  a:vw . "/g" 
-  let distPath = ""
-  if strlen(a:replacedBy) > 0
-    let distPath = input("replace [" . cw . "] >> [" . a:replacedBy . "] in: ",  g:yuhuiGlobalSearchPath, "dir")
-  else
-    let distPath = input("search [" . cw . "]: ",  g:yuhuiGlobalSearchPath, "dir")
-  endif
-  if distPath[0] != '.'
-      let distPath = './' . distPath
-  endif
-  let g:yuhuiGlobalSearchPath = distPath
-  let cmdstr =  ":vimgrep " . cw . " " . distPath . ""
-  echo '[' . cmdstr ']'
-  execute cmdstr
-  if strlen(a:replacedBy) > 0
-    let replaceCount = 1
-    for qf in getqflist()
-      exe "cr " . replaceCount 
-      exe "b" . qf.bufnr
-      call cursor(qf.lnum, qf.col)
-      try
-        exe "s/" . a:vw . "/" . a:replacedBy . "/gc"
-        exe "w"
-      catch /E486:/
-      endtry
-      let replaceCount = replaceCount + 1
-    endfor
-  else
-    exe ":cw"
-  endif
+" find word in directories."{{{
+let g_my_search_path = '**/*'
+let g_my_search_replace_all = 0
+let g_my_search_keyword = ''
+function! SearchWordGlobal(vw, matchWord)
+	if a:matchWord == 0
+		let cw ="/" .  a:vw . "/g" 
+	else
+		let cw = "/\\<" . a:vw . "\\>/g"
+	endif
+	if strlen( g:g_my_search_path) < 1
+		let g:g_my_search_path = expand("%:h") . '/**/*'
+	endif
+	let g:g_my_search_path = input("search [" . cw . "]: ",  g:g_my_search_path, "dir")
+	echo "vimgrep " . cw . " " . g:g_my_search_path . ""
+	exe  "vimgrep " . cw . " " . g:g_my_search_path . ""
+	exe ":cw"
+	let qflst = getqflist()
+	let g:g_my_search_replace_all = len(qflst) > 0
+	let g:g_my_search_keyword = a:vw
 endfunction
-vmap <silent> <leader>gf "xy<CR>:call SearchWordGlobal(@x, "")<CR>
-nmap <silent> <leader>gf :call SearchWordGlobal(input("search: ", expand("<cword>")), "")<CR>
-nmap <silent> <leader>gr :call SearchWordGlobal(input("search: ", expand("<cword>")), input("replace by:", ""))<CR>
-vmap <silent> <leader>gr "xy<CR>:call SearchWordGlobal(@x, input("replace by:", ""))<CR>
-vmap <silent> <leader>grw "xy<CR>:call SearchWordGlobal("\\<" . @x . "\\>", input("replace word by:", ""))<CR>
+" replace words in directories
+function! ReplaceWordGlobal( noConfirm, matchWord)
+	if( g:g_my_search_replace_all == 0) 
+		return
+	endif
+	
+	call inputsave()
+	let newkw = input("Replace [" . g:g_my_search_keyword . "]by ",  '')
+	call inputrestore()
+
+	if(a:matchWord == 0 )
+		let replaceCmd =  ":%s/" . g:g_my_search_keyword . "/" . newkw
+	else
+		let replaceCmd =  ":%s/\\<" . g:g_my_search_keyword . "\\>/" . newkw
+	endif
+	if a:noConfirm == 0 
+		let replaceCmd=  replaceCmd . "/g"
+	else
+		let replaceCmd=  replaceCmd . "/gc"
+	endif
+	call inputrestore();
+	for qf in getqflist()
+		exe ":b" . qf.bufnr
+		exe replaceCmd
+	endfor
+endfunction
+vmap <silent> <leader>gf "xy<CR>:call SearchWordGlobal(@x, 0)<CR>
+vmap <silent> <leader>gfw "xy<CR>:call SearchWordGlobal(@x, 1)<CR>
+nmap <silent> <leader>gf :call SearchWordGlobal(input("search: ", expand("<cword>")), 0)<CR>
+nmap <silent> <leader>gfw :call SearchWordGlobal(input("search: ", expand("<cword>")), 1)<CR>
+vmap <silent> <leader>gr :call ReplaceWordGlobal(1, 0)<CR>
+vmap <silent> <leader>grw :call ReplaceWordGlobal(1, 1)<CR>
+"}}}
 
 " hex model
 nnoremap <silent> hex  :%!xxd<CR>
@@ -308,60 +331,54 @@ function! CreateFoldByRegion(regionSign)
   else
     let moveDown = startLineNum - line('.')
     exe "normal V" . moveDown . "j%zf"
+    exe "normal zf"
+"    exe "normal zz"
   endif
 endfunction
-autocmd FileType c,cpp,h nmap <silent> tzf :call CreateFoldByRegion('{')<CR>
+autocmd FileType c,cpp,h,cs nmap <silent> <leader>zf :call CreateFoldByRegion('{')<CR>
 
-" add file discription."
-let g:enableAutoFileDescription = 1
+
+" add file discription."{{{
 function! AddDescription()
 
-  let lineCnt = line("$")
-  if lineCnt > 1 || g:enableAutoFileDescription == 0
-    return 0
-  endif
-  let time ="* @" .  strftime("%c") 
-  let fileName = expand("%")
-  let author = "* created by yuhui."
-  let description = ['/******************', ('* file: ' . fileName), '*', '*', author, time, '*******************/']
-  let exfn = tolower(strpart(fileName, strlen(fileName)-2, strlen(fileName)))
-  if  exfn == ".h"
-    let macro = toupper(expand("%"))
-    let tidx = strridx(macro, '/')
-    let macro = strpart(macro, tidx + 1, strlen(macro) - tidx)
-    let macro = substitute(macro, "[ \\./]", "_", "g")
-    let macro = substitute(macro, ".\.\w*$", "", "")
-    let ifnmacro = "#ifndef " . macro . "_H"
-    call add(description, ifnmacro)
-    ""echo description
-    let defmacro = "#define " . macro . "_H"
-    call add(description, defmacro)
-    call add(description, " ")
-    call add(description, "{")
-    call add(description, "}")
-    call add(description, "#endif")
-  else
-    let isSrcFile = tolower(strpart(fileName, strlen(fileName) - 4, 4)) == '.cpp' ? 4 : tolower(strpart(fileName, strlen(fileName) - 2, 2)) == '.c' ? 2 : 0
-    if isSrcFile > 0
-      let theader = expand("%")
-      let theader = substitute(theader, '.*/', '' , '')
-      let tidx = strridx(theader, '.')
-      let theader = strpart(theader, 0, tidx)
-      let theader = '#include "' . theader . '.h"'
-      call add(description, theader)
-      call add(description, '')
-    endif
-  endif
-  let fail= append(0, description)
-  if fail
-    return 1
-  endif
+	let lineCnt = len(getbufline(bufname("%"), 0, "$"))
+	if lineCnt > 1
+		return 0
+	endif
+	let time ="* @" .  strftime("%c") 
+	let file = "*" . expand("%")
+	let author = "* created by yuhui."
+	let description = ['/******************', file, "*", "*", author, time, '*******************/']
+	let exfn = tolower(strpart(file, strlen(file)-2, strlen(file)))
+	if  exfn == ".h"
+		let macro = toupper(expand("%"))
+		let tmacro = "#ifndef " . strpart(macro, 0, strlen(macro)-2) . "_H"
+		""echo macro
+		call add(description, tmacro)
+		""echo description
+		let macro = "#define " . strpart(macro, 0, strlen(macro)-2) . "_H"
+		call add(description, macro)
+		call add(description, " ")
+		call add(description, "{")
+		call add(description, "}")
+		call add(description, "#endif")
+	else
+		let isSrcFile = tolower(strpart(file, strlen(file) - 4, 4)) == '.cpp' ? 4 : tolower(strpart(file, strlen(file) - 2, 2)) == '.c' ? 2 : 0
+		if isSrcFile > 0
+			let theader = expand("%")
+			let theader = strpart(file, 1, strlen(file) - isSrcFile)
+			let theader = '#include "' . theader . 'h"'
+			call add(description, theader)
+			call add(description, '')
+		endif
+	endif
+	let fail= append(0, description)
+	if fail
+		return 1
+	endif
 endfunction
-autocmd FileType c,cpp,h exe ":call AddDescription()"
-
-function! Snippet_generate_attrAccessor(attrName)
-
-endfunction
+autocmd FileType c,cpp,h,cs exe ":call AddDescription()"
+"}}}
 
 """"""""""""""""""""""""""""""for NERDTree"
 " >> auto change current directory to current openning file.
@@ -728,9 +745,9 @@ set updatetime=500
 set cmdheight=2
 
 " Contextual code actions (requires CtrlP or unite.vim)
-nnoremap <leader><space> :OmniSharpGetCodeActions<cr>
+" nnoremap <leader><space> :OmniSharpGetCodeActions<cr>
 " Run code actions with text selected in visual mode to extract method
-vnoremap <leader><space> :call OmniSharp#GetCodeActions('visual')<cr>
+" vnoremap <leader><space> :call OmniSharp#GetCodeActions('visual')<cr>
 
 " rename with dialog
 nnoremap <leader>nm :OmniSharpRename<cr>
@@ -752,4 +769,59 @@ nnoremap <leader>sp :OmniSharpStopServer<cr>
 nnoremap <leader>th :OmniSharpHighlightTypes<cr>
 "Don't ask to save when changing buffers (i.e. when jumping to a type definition)
 set hidden
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" thumbnail
+nnoremap <leader><tab> :Thumbnail<cr>
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" unity lo
+let g:nvim_unity_log_linenum = 0
+function! OpenUnityLog()
+	let logfileName = "/Users/yuhui/Library/Logs/Unity/Editor.log"
+    print "begin sync unity log..."
+    try 
+        exe "tabfind " . "unity_log_buf"
+        exe "G"
+        """  exe "r! sed -n " . g:nvim_unity_log_linenum . ',' . curline . 'p ' . logfileName
+        let alst = readfile(logfileName)
+        let lastline = len(alst)
+        if lastline == g:nvim_unity_log_linenum 
+            print 'No fresh log!'
+            return 
+        endif
+        :put =alst[g:nvim_unity_log_linenum: lastline]
+        let g:nvim_unity_log_linenum = lastline
+    catch /E345:/
+        tabnew "unity_log_buf"
+        let alst = readfile(logfileName)
+        let g:nvim_unity_log_linenum = len(alst)
+        :put =alst[0: g:nvim_unity_log_linenum]
+        setlocal buftype=nofile
+        setlocal noswapfile
+    endtry
+
+	exe ":g/^(Filename:/d"
+	exe ":g/^UnityEngine\\./d"
+	exe ":g/^UnityEditor\\./d"
+	exe ":g/^Wizard\\./d"
+	exe ":g/^Spoine\\./d"
+	exe ":g/^\\s*$/d"
+	exe ":g/^\[\\w\\+/d"
+endfunction
+nmap <leader>lg :call OpenUnityLog()<CR>
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" ctrlp
+let g:ctrlp_custom_ignore = '\v[\/]\.(git|hg|svn)$'
+let g:ctrlp_regexp = 1
+let g:ctrlp_use_caching = 1
+let g:OmniSharp_selector_ui = 'ctrlp'  " Use ctrlp.vim
+let g:ctrlp_max_depth = 40
+set wildignore+=*/.git/*,*/.hg/*,*/.svn/*        " Linux/MacOSX
+let g:Omnisharp_start_server = 1
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let g:jedi#auto_initialization = 1
+let g:jedi#popup_on_dot = 1
+let g:jedi#auto_close_doc = 1
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" jedi for python 
 
