@@ -291,8 +291,10 @@ function! ReplaceWordGlobal( noConfirm, matchWord)
 	call inputrestore()
     let lastline = -1
     let lastbnum = -1
+    let replacedCnt = 0
 	for qf in getqflist()
         try 
+            let replacedCnt = replacedCnt + 1
             if qf.lnum == lastline
                 echo 'skip line' . qf
                 continue
@@ -308,6 +310,7 @@ function! ReplaceWordGlobal( noConfirm, matchWord)
             echo 'no fuck   ' . qf
         endtry
 	endfor
+    echo 'Replaced: ' . replacedCnt . '.'
 endfunction
 vmap <silent> <leader>gf "xy<CR>:call SearchWordGlobal(@x, 0)<CR>
 vmap <silent> <leader>gfw "xy<CR>:call SearchWordGlobal(@x, 1)<CR>
