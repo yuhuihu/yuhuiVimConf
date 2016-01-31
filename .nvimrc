@@ -98,7 +98,7 @@ else
   syntax enable
   "colo wolfpack
   " colo industry
-  colo delek		
+  colo peachpuff		
   " bandit 
   " color  molokai 
   " color lettuce
@@ -275,7 +275,7 @@ function! ReplaceWordGlobal( noConfirm, matchWord)
 	endif
 	
 	call inputsave()
-	let newkw = input("Replace [" . g:g_my_search_keyword . "]by ",  '')
+	let newkw = input("Global Replace [" . g:g_my_search_keyword . "] by: ",  '')
 	call inputrestore()
 
 	if(a:matchWord == 0 )
@@ -288,24 +288,33 @@ function! ReplaceWordGlobal( noConfirm, matchWord)
 	else
 		let replaceCmd=  replaceCmd . "/gc"
 	endif
-	call inputrestore();
+	call inputrestore()
     let lastline = -1
+    let lastbnum = -1
 	for qf in getqflist()
-        if qf.lnum == lastline
-            echo 'skip line' . qf
-            continue
-        endif
-		exe ":b" . qf.bufnr
-		exe replaceCmd
-        let lastline = qf.lnum
+        try 
+            if qf.lnum == lastline
+                echo 'skip line' . qf
+                continue
+            endif
+            if qf.bufnr != lastbnum
+                exe ":b" . qf.bufnr
+                let lastbnum = qf.bufnr
+            endif
+            exe "" . qf.lnum . ""
+            exe replaceCmd
+            let lastline = qf.lnum
+        catch /E259:/
+            echo 'no fuck   ' . qf
+        endtry
 	endfor
 endfunction
 vmap <silent> <leader>gf "xy<CR>:call SearchWordGlobal(@x, 0)<CR>
 vmap <silent> <leader>gfw "xy<CR>:call SearchWordGlobal(@x, 1)<CR>
 nmap <silent> <leader>gf :call SearchWordGlobal(input("search: ", expand("<cword>")), 0)<CR>
 nmap <silent> <leader>gfw :call SearchWordGlobal(input("search: ", expand("<cword>")), 1)<CR>
-vmap <silent> <leader>tr :call ReplaceWordGlobal(1, 0)<CR>
-vmap <silent> <leader>trw :call ReplaceWordGlobal(1, 1)<CR>
+vmap <silent> <leader>tr :call ReplaceWordGlobal(1, 1)<CR>
+vmap <silent> <leader>trw :call ReplaceWordGlobal(1, 0)<CR>
 "}}}
 
 " hex model
