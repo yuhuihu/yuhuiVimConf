@@ -219,26 +219,27 @@ let g:DoxygenToolkit_authorName="yuhuibear@gmail.com"
 ""}}}
 
 " comment line."
-let g:commentPrefix = ''
-autocmd BufEnter *.c,cpp,cs let g:commentPrefix = '//'
-autocmd BufEnter *.py let g:commentPrefix = '#'
+let g:commentPrefix = '//'
 function! CommentLine()
-  let commentPattern = '^\s*\t*' . g:commentPrefix
-  let line = getline('.')
-  if strlen(substitute(line, "[\s\t]", "", "")) < 1
-    return
-  endif
-  if line =~ commentPattern
-    let idx = stridx(line, g:commentPrefix[0], 0)
-    let newline = strpart(line, 0, idx) 
-    let newline = newline . strpart(line, idx + strlen(g:commentPrefix), strlen(line) - strlen(g:commentPrefix))
-    call setline('.', newline)
-  else
-    let newline = g:commentPrefix . line
-    call setline('.', newline)
-  endif
+    let commentPattern = '^\s*\t*' . g:commentPrefix
+    let line = getline('.')
+    if strlen(substitute(line, "[\s\t]", "", "")) < 1
+        return
+    endif
+    if line =~ commentPattern
+        let idx = stridx(line, g:commentPrefix[0], 0)
+        let newline = strpart(line, 0, idx) 
+        let newline = newline . strpart(line, idx + strlen(g:commentPrefix), strlen(line) - strlen(g:commentPrefix))
+        call setline('.', newline)
+    else
+        let newline = g:commentPrefix . line
+        call setline('.', newline)
+    endif
+    echo g:commentPrefix
 endfunction
-autocmd FileType c,cpp,cs,py map <leader>tm :call CommentLine()<CR>
+"""autocmd BufEnter *.c,cpp,cs let g:commentPrefix = '//'
+"""autocmd BufEnter *.py let g:commentPrefix = '#'
+autocmd FileType c,cpp,cs,py map <leader>m :call CommentLine()<CR>
 "
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -278,9 +279,9 @@ function! ReplaceWordGlobal( noConfirm, matchWord)
 	call inputrestore()
 
 	if(a:matchWord == 0 )
-		let replaceCmd =  ":%s/" . g:g_my_search_keyword . "/" . newkw
+		let replaceCmd =  ":s/" . g:g_my_search_keyword . "/" . newkw
 	else
-		let replaceCmd =  ":%s/\\<" . g:g_my_search_keyword . "\\>/" . newkw
+		let replaceCmd =  ":s/\\<" . g:g_my_search_keyword . "\\>/" . newkw
 	endif
 	if a:noConfirm == 0 
 		let replaceCmd=  replaceCmd . "/g"
@@ -288,17 +289,23 @@ function! ReplaceWordGlobal( noConfirm, matchWord)
 		let replaceCmd=  replaceCmd . "/gc"
 	endif
 	call inputrestore();
+    let lastline = -1
 	for qf in getqflist()
+        if qf.lnum == lastline
+            echo 'skip line' . qf
+            continue
+        endif
 		exe ":b" . qf.bufnr
 		exe replaceCmd
+        let lastline = qf.lnum
 	endfor
 endfunction
 vmap <silent> <leader>gf "xy<CR>:call SearchWordGlobal(@x, 0)<CR>
 vmap <silent> <leader>gfw "xy<CR>:call SearchWordGlobal(@x, 1)<CR>
 nmap <silent> <leader>gf :call SearchWordGlobal(input("search: ", expand("<cword>")), 0)<CR>
 nmap <silent> <leader>gfw :call SearchWordGlobal(input("search: ", expand("<cword>")), 1)<CR>
-vmap <silent> <leader>gr :call ReplaceWordGlobal(1, 0)<CR>
-vmap <silent> <leader>grw :call ReplaceWordGlobal(1, 1)<CR>
+vmap <silent> <leader>tr :call ReplaceWordGlobal(1, 0)<CR>
+vmap <silent> <leader>trw :call ReplaceWordGlobal(1, 1)<CR>
 "}}}
 
 " hex model
@@ -631,6 +638,7 @@ nmap <leader><Space> <Plug>VimwikiToggleListItem
 " TagList
 let g:tagbar_autoclose = 1
 nnoremap <silent> T :TagbarToggle<CR>
+let g:tagbar_left = 1
 
 """"""""""""""""""""""""""""""""""""""""""" ctags"
 "autocmd FileType c,cpp,h,hpp nnoremap ttf: ts expand("<cword>")<CR>
