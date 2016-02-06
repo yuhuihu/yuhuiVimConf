@@ -98,7 +98,7 @@ else
   syntax enable
   "colo wolfpack
   " colo industry
-  colo peachpuff		
+  " colo peachpuff		
   " bandit 
   " color  molokai 
   " color lettuce
@@ -402,6 +402,9 @@ autocmd FileType c,cpp,h,cs exe ":call AddDescription()"
 """"""""""""""""""""""""""""""for NERDTree"
 " >> auto change current directory to current openning file.
 let nerdTreeRoot = "."
+let g:NERDTreeDirArrows = 1
+let g:NERDTreeDirArrowExpandable = '▸'
+let g:NERDTreeDirArrowCollapsible = '▾'
 nnoremap <silent> <F2> :let curPath =expand("%:h:p")<Bar> exe "NERDTree " . (len(curPath)<1 ?
       \nerdTreeRoot : curPath) . ""<CR>exe ":! cd " . (len(curPath)<1 ?
       \nerdTreeRoot : curPath) . ""<CR>
@@ -637,6 +640,10 @@ nmap <silent> tvd :call SVNDiff()<CR>
 " vim viki
 let g:vimwiki_hl_headers = 1
 let g:vimwiki_hl_cb_checked = 1
+let wiki_icloud = {}
+let wiki_icloud.path = '~/Library/Mobile\ Documents/com~apple~CloudDocs/vimwiki'
+let wiki_icloud.index = 'main'
+let g:vimwiki_list = [wiki_icloud]
 nmap <leader><Space> <Plug>VimwikiToggleListItem
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
