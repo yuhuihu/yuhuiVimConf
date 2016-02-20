@@ -24,6 +24,7 @@ Plugin 'https://github.com/kien/ctrlp.vim.git'
 Plugin 'http://git.oschina.net/qiuchangjie/ShaderHighLight'
 Plugin 'https://github.com/tpope/vim-fugitive.git'
 Plugin 'https://github.com/davidhalter/jedi-vim.git'
+Plugin 'https://github.com/nathanaelkane/vim-indent-guides.git'
 " Plugin 'https://github.com/ervandew/supertab.git'
 " " The following are examples of different formats supported.
 " " Keep Plugin commands between vundle#begin/end.
@@ -96,18 +97,7 @@ else
   set t_Co=16
   set background=light
   syntax enable
-  "colo wolfpack
-  " colo industry
-  " colo peachpuff		
-  " bandit 
-  " color  molokai 
-  " color lettuce
-  " color navajo-night
-  " colorscheme candycode 
-  " desert256		
-  " colorscheme calmar256-light
-  " colorscheme xoria256
-  " colorscheme molokai
+  colo peachpuff
 endif
 
 "let &termencoding=&encoding
@@ -851,4 +841,9 @@ let g:jedi#popup_on_dot = 1
 let g:jedi#auto_close_doc = 1
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " jedi for python 
+""""""""""""""""""""""""""""""""""""""""
+" for indent 
+let g:indent_guides_enable_on_vim_startup=1
+let g:indent_guides_start_level=2
+let g:indent_guides_guide_size=1
 
