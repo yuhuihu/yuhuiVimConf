@@ -308,8 +308,8 @@ vmap <silent> <leader>gf "xy<CR>:call SearchWordGlobal(@x, 0)<CR>
 vmap <silent> <leader>gfw "xy<CR>:call SearchWordGlobal(@x, 1)<CR>
 nmap <silent> <leader>gf :call SearchWordGlobal(input("search: ", expand("<cword>")), 0)<CR>
 nmap <silent> <leader>gfw :call SearchWordGlobal(input("search: ", expand("<cword>")), 1)<CR>
-vmap <silent> <leader>tr :call ReplaceWordGlobal(1, 1)<CR>
-vmap <silent> <leader>trw :call ReplaceWordGlobal(1, 0)<CR>
+map <silent> <leader>tr :call ReplaceWordGlobal(1, 1)<CR>
+map <silent> <leader>trw :call ReplaceWordGlobal(1, 0)<CR>
 "}}}
 
 " hex model
@@ -848,6 +848,12 @@ let g:jedi#auto_close_doc = 1
 let g:indent_guides_enable_on_vim_startup=1
 let g:indent_guides_start_level=2
 let g:indent_guides_guide_size=1
-""""""""""""""""""""
-"let g:airline_powerline_fonts = 1
-"set guifont=Droid\ Sans\ Mono\ for\ Powerline\ Plus\ Nerd\ File\ Types:h11
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" syntastic
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+let g:syntastic_always_populate_loc_list = 0
+let g:syntastic_auto_loc_list = 0
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
