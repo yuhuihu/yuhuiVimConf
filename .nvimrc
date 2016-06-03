@@ -3,6 +3,7 @@ filetype off                  " required
 
 " set the runtime path to include Vundle and initialize
 set rtp+=~/.vim/bundle/Vundle.vim
+set rtp+=/usr/local/opt/fzf
 call vundle#begin()
 " " alternatively, pass a path where Vundle should install plugins
 " "call vundle#begin('~/some/path/here')
@@ -14,17 +15,19 @@ Plugin 'https://github.com/OmniSharp/omnisharp-vim.git'
 Plugin 'https://github.com/tpope/vim-dispatch.git'
 Plugin 'https://github.com/rom399/vim-colorsheme-scroller.git'
 Plugin 'https://github.com/majutsushi/tagbar.git'
-Plugin 'https://github.com/scrooloose/nerdtree.git'
+Plugin 'https://github.com/Shougo/vimfiler.vim.git'
 Plugin 'https://github.com/vimwiki/vimwiki.git'
 Plugin 'https://github.com/vim-scripts/DoxygenToolkit.vim.git'
-" Plugin 'https://github.com/scrooloose/syntastic.git'
+Plugin 'https://github.com/scrooloose/syntastic.git'
 Plugin 'https://github.com/itchyny/thumbnail.vim.git'
 Plugin 'https://github.com/Valloric/YouCompleteMe.git'
-Plugin 'https://github.com/kien/ctrlp.vim.git'
-Plugin 'http://git.oschina.net/qiuchangjie/ShaderHighLight'
+Plugin 'https://github.com/ctrlpvim/ctrlp.vim'
 Plugin 'https://github.com/tpope/vim-fugitive.git'
 Plugin 'https://github.com/davidhalter/jedi-vim.git'
 Plugin 'https://github.com/nathanaelkane/vim-indent-guides.git'
+Plugin 'https://github.com/ryanoasis/vim-devicons.git'
+Plugin 'https://github.com/vim-airline/vim-airline.git'
+Plugin 'https://github.com/ryanoasis/nerd-fonts.git'
 " Plugin 'https://github.com/ervandew/supertab.git'
 " " The following are examples of different formats supported.
 " " Keep Plugin commands between vundle#begin/end.
@@ -85,19 +88,18 @@ function! MyDiff()
   silent execute '!' . cmd . ' ' . opt . arg1 . ' ' . arg2 . ' > ' . arg3 . eq
 endfunction
 
-"for GUI
-set guioptions-=T
-set guioptions-=m
-"for terminal
-set background=dark " Change to light if you want the light variant
+set t_Co=256
 if has('gui_running')
+    "for GUI
+    set guioptions-=T
+    set guioptions-=m
   colorscheme peachpuff " bandit fine_blue2 	fog wombat
   "set guifont=Monaco\ 9
-else
-  set t_Co=16
-  set background=light
+else "for terminal
+  "set background=dark " Change to light if you want the light variant
+  "set background=light
   syntax enable
-  colo peachpuff
+  colo morning
 endif
 
 "let &termencoding=&encoding
@@ -105,7 +107,7 @@ set fileencodings=utf-8     ",gbk,ucs-bom,cp936
 "set termencoding=utf-8,gbk,ucs-bom
 "set encoding=utf-8
 set laststatus=2
-set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('%s','','')}\ %=%B@%O\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
+"set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('%s','','')}\ %=%B@%O\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
 
 """"""""""""""""""""""""""""""""""""""
 "diff 
@@ -396,8 +398,8 @@ let g:NERDTreeDirArrows = 1
 let g:NERDTreeDirArrowExpandable = '▸'
 let g:NERDTreeDirArrowCollapsible = '▾'
 nnoremap <silent> <F2> :let curPath =expand("%:h:p")<Bar> exe "NERDTree " . (len(curPath)<1 ?
-      \nerdTreeRoot : curPath) . ""<CR>exe ":! cd " . (len(curPath)<1 ?
-      \nerdTreeRoot : curPath) . ""<CR>
+      \g:nerdTreeRoot : curPath) . ""<CR>exe ":! cd " . (len(curPath)<1 ?
+      \g:nerdTreeRoot : curPath) . ""<CR>
 
 
 ""extract file name from full file location
@@ -846,4 +848,6 @@ let g:jedi#auto_close_doc = 1
 let g:indent_guides_enable_on_vim_startup=1
 let g:indent_guides_start_level=2
 let g:indent_guides_guide_size=1
-
+""""""""""""""""""""
+"let g:airline_powerline_fonts = 1
+"set guifont=Droid\ Sans\ Mono\ for\ Powerline\ Plus\ Nerd\ File\ Types:h11
