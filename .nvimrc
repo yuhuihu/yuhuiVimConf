@@ -3,7 +3,6 @@ filetype off                  " required
 
 " set the runtime path to include Vundle and initialize
 set rtp+=~/.vim/bundle/Vundle.vim
-set rtp+=/usr/local/opt/fzf
 call vundle#begin()
 " " alternatively, pass a path where Vundle should install plugins
 " "call vundle#begin('~/some/path/here')
@@ -15,19 +14,20 @@ Plugin 'https://github.com/OmniSharp/omnisharp-vim.git'
 Plugin 'https://github.com/tpope/vim-dispatch.git'
 Plugin 'https://github.com/rom399/vim-colorsheme-scroller.git'
 Plugin 'https://github.com/majutsushi/tagbar.git'
-Plugin 'https://github.com/Shougo/vimfiler.vim.git'
+Plugin 'https://github.com/scrooloose/nerdtree.git'
 Plugin 'https://github.com/vimwiki/vimwiki.git'
 Plugin 'https://github.com/vim-scripts/DoxygenToolkit.vim.git'
 Plugin 'https://github.com/scrooloose/syntastic.git'
 Plugin 'https://github.com/itchyny/thumbnail.vim.git'
 Plugin 'https://github.com/Valloric/YouCompleteMe.git'
-Plugin 'https://github.com/ctrlpvim/ctrlp.vim'
+Plugin 'https://github.com/ctrlpvim/ctrlp.vim.git'
+Plugin 'http://git.oschina.net/qiuchangjie/ShaderHighLight'
 Plugin 'https://github.com/tpope/vim-fugitive.git'
 Plugin 'https://github.com/davidhalter/jedi-vim.git'
 Plugin 'https://github.com/nathanaelkane/vim-indent-guides.git'
-Plugin 'https://github.com/ryanoasis/vim-devicons.git'
-Plugin 'https://github.com/vim-airline/vim-airline.git'
-Plugin 'https://github.com/ryanoasis/nerd-fonts.git'
+"Plugin 'vim-airline/vim-airline'
+"Plugin 'vim-airline/vim-airline-themes'
+"Plugin 'ryanoasis/vim-devicons'
 " Plugin 'https://github.com/ervandew/supertab.git'
 " " The following are examples of different formats supported.
 " " Keep Plugin commands between vundle#begin/end.
@@ -61,7 +61,8 @@ filetype plugin indent on    " required
 " " see :h vundle for more details or wiki for FAQ
 " " Put your non-Plugin stuff after this line
 filetype plugin on
-syntax on
+filetype indent on
+filetype on
 
 set diffexpr=MyDiff()"
 function! MyDiff()
@@ -88,26 +89,28 @@ function! MyDiff()
   silent execute '!' . cmd . ' ' . opt . arg1 . ' ' . arg2 . ' > ' . arg3 . eq
 endfunction
 
-set t_Co=256
+"for GUI
+set guioptions-=T
+set guioptions-=m
+"for terminal
+set background=dark " Change to light if you want the light variant
 if has('gui_running')
-    "for GUI
-    set guioptions-=T
-    set guioptions-=m
   colorscheme peachpuff " bandit fine_blue2 	fog wombat
   "set guifont=Monaco\ 9
-else "for terminal
-  "set background=dark " Change to light if you want the light variant
+  set guifont=Droid\ Sans\ Mono\ for\ Powerline\ Plus\ Nerd\ File\ Types:h11
+else
+  set t_Co=256
   "set background=light
-  syntax enable
-  colo morning
+  colo peachpuff
 endif
 
 "let &termencoding=&encoding
 set fileencodings=utf-8     ",gbk,ucs-bom,cp936
 "set termencoding=utf-8,gbk,ucs-bom
-"set encoding=utf-8
+set encoding=utf8
+set ttimeoutlen=50
 set laststatus=2
-"set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('%s','','')}\ %=%B@%O\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
+set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('%s','','')}\ %=%B@%O\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
 
 """"""""""""""""""""""""""""""""""""""
 "diff 
@@ -118,6 +121,7 @@ set diffexpr=""
 """"""""""""""""""""""""""""""""""""""
 " synatx
 "au FileType frag,vert,fp,vp,glsl,vsh,fsh setf glsl 
+syntax on
 syntax enable
 syntax sync minlines=256
 au BufNewFile,BufRead *.frag,*.vert,*.fp,*.vp,*.glsl setf glsl 
@@ -126,7 +130,6 @@ au BufNewFile,BufRead *.frag,*.vert,*.fp,*.vp,*.glsl setf glsl
 set autoread
 set cursorline		"nocursorline ""hilight current line, nocursorline
 set hlsearch
-filetype on
 ""set expandtab=0
 set expandtab
 set tabstop=4
@@ -135,7 +138,11 @@ set softtabstop=4
 set nu
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " python indent
-autocmd BufRead *.py setlocal smartindent cinwords=if,elif,else,for,while,try,except,finally,def,class
+autocmd FileType *.py setlocal smartindent cinwords=if,elif,else,for,while,try,except,finally,def,class
+autocmd FileType *.py setlocal tabstop=8
+autocmd FileType *.py setlocal shiftwidth=4
+autocmd FileType *.py setlocal softtabstop=4
+autocmd FileType *.py setlocal autoindent
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " c/cpp indent
@@ -398,8 +405,8 @@ let g:NERDTreeDirArrows = 1
 let g:NERDTreeDirArrowExpandable = '▸'
 let g:NERDTreeDirArrowCollapsible = '▾'
 nnoremap <silent> <F2> :let curPath =expand("%:h:p")<Bar> exe "NERDTree " . (len(curPath)<1 ?
-      \g:nerdTreeRoot : curPath) . ""<CR>exe ":! cd " . (len(curPath)<1 ?
-      \g:nerdTreeRoot : curPath) . ""<CR>
+      \nerdTreeRoot : curPath) . ""<CR>exe ":! cd " . (len(curPath)<1 ?
+      \nerdTreeRoot : curPath) . ""<CR>
 
 
 ""extract file name from full file location
@@ -826,6 +833,7 @@ function! OpenUnityLog()
 	exe ":g/^Spoine\\./d"
 	exe ":g/^\\s*$/d"
 	exe ":g/^\[\\w\\+/d"
+	exe ":g/^System\./d"
 endfunction
 nmap <leader>lg :call OpenUnityLog()<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -834,7 +842,8 @@ let g:ctrlp_custom_ignore = '\v[\/]\.(git|hg|svn)$'
 let g:ctrlp_regexp = 1
 let g:ctrlp_use_caching = 1
 let g:OmniSharp_selector_ui = 'ctrlp'  " Use ctrlp.vim
-let g:ctrlp_max_depth = 40
+let g:ctrlp_max_depth = 10
+let g:ctrlp_match_window = 'bottom,order:btt,min:1,max:16,results:16'
 set wildignore+=*/.git/*,*/.hg/*,*/.svn/*        " Linux/MacOSX
 let g:Omnisharp_start_server = 1
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -857,3 +866,11 @@ let g:syntastic_always_populate_loc_list = 0
 let g:syntastic_auto_loc_list = 0
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" airline
+"let g:airline_powerline_fonts=1
+" let g:airline#extensions#ctrlp#color_template = 'insert' 
+" let g:airline#extensions#ctrlp#color_template = 'normal'
+" let g:airline#extensions#ctrlp#color_template = 'visual'
+" let g:airline#extensions#ctrlp#color_template = 'replace'
+" 
