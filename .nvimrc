@@ -63,6 +63,10 @@ filetype plugin indent on    " required
 filetype plugin on
 filetype indent on
 filetype on
+"let &termencoding=&encoding
+set fileencodings=utf-8     ",gbk,ucs-bom,cp936
+"set termencoding=utf-8,gbk,ucs-bom
+"set encoding=utf-8
 
 set diffexpr=MyDiff()"
 function! MyDiff()
@@ -104,10 +108,6 @@ else
   colo peachpuff
 endif
 
-"let &termencoding=&encoding
-set fileencodings=utf-8     ",gbk,ucs-bom,cp936
-"set termencoding=utf-8,gbk,ucs-bom
-set encoding=utf8
 set ttimeoutlen=50
 set laststatus=2
 set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('%s','','')}\ %=%B@%O\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
@@ -404,10 +404,11 @@ let nerdTreeRoot = "."
 let g:NERDTreeDirArrows = 1
 let g:NERDTreeDirArrowExpandable = '▸'
 let g:NERDTreeDirArrowCollapsible = '▾'
-nnoremap <silent> <F2> :let curPath =expand("%:h:p")<Bar> exe "NERDTree " . (len(curPath)<1 ?
-      \nerdTreeRoot : curPath) . ""<CR>exe ":! cd " . (len(curPath)<1 ?
-      \nerdTreeRoot : curPath) . ""<CR>
-
+function! OpenCurrentDirByNerd ()
+    let curPath = substitute(expand("%:h:p"), '\s\+', '\\&', 'g')
+    exe "NERDTree " . curPath
+endfunction
+nnoremap <silent> <F2> :call OpenCurrentDirByNerd()<CR>
 
 ""extract file name from full file location
 function! ExtractFileName(fullName)"{{{
