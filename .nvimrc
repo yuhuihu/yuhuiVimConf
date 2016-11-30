@@ -19,12 +19,15 @@ Plugin 'https://github.com/vimwiki/vimwiki.git'
 Plugin 'https://github.com/vim-scripts/DoxygenToolkit.vim.git'
 Plugin 'https://github.com/scrooloose/syntastic.git'
 Plugin 'https://github.com/itchyny/thumbnail.vim.git'
-Plugin 'https://github.com/Valloric/YouCompleteMe.git'
+"Plugin 'https://github.com/Valloric/YouCompleteMe.git'
 Plugin 'https://github.com/ctrlpvim/ctrlp.vim.git'
 Plugin 'http://git.oschina.net/qiuchangjie/ShaderHighLight'
 Plugin 'https://github.com/davidhalter/jedi-vim.git'
 Plugin 'https://github.com/nathanaelkane/vim-indent-guides.git'
+Plugin 'https://github.com/tomasr/molokai.git'
 Plugin 'https://github.com/altercation/vim-colors-solarized.git'
+Plugin 'itchyny/calendar.vim'
+"Plugin 'git@github.com:Shougo/dein.vim.git'
 "Plugin 'vim-airline/vim-airline'
 "Plugin 'vim-airline/vim-airline-themes'
 "Plugin 'ryanoasis/vim-devicons'
@@ -311,12 +314,27 @@ function! ReplaceWordGlobal( noConfirm, matchWord)
 	endfor
     echo 'Replaced: ' . replacedCnt . '.'
 endfunction
+
 vmap <silent> <leader>gf "xy<CR>:call SearchWordGlobal(@x, 0)<CR>
 vmap <silent> <leader>gfw "xy<CR>:call SearchWordGlobal(@x, 1)<CR>
 nmap <silent> <leader>gf :call SearchWordGlobal(input("search: ", expand("<cword>")), 0)<CR>
 nmap <silent> <leader>gfw :call SearchWordGlobal(input("search: ", expand("<cword>")), 1)<CR>
-map <silent> <leader>tr :call ReplaceWordGlobal(1, 1)<CR>
-map <silent> <leader>trw :call ReplaceWordGlobal(1, 0)<CR>
+map <silent> <leader>gr :call ReplaceWordGlobal(1, 1)<CR>
+map <silent> <leader>grw :call ReplaceWordGlobal(1, 0)<CR>
+
+let my_g_extralHilight = ''
+function! ExtralHilight(newkw)
+    if strlen(a:newkw) < 1
+        let g:my_g_extralHilight = ''
+        return
+    endif
+
+    if strlen(g:my_g_extralHilight) > 0 
+        let g:my_g_extralHilight = g:my_g_extralHilight . '\|\(' . newkw . '\)'
+    endif
+    exe '/' . g:my_g_extralHilight
+endfunction
+vmap <silent> <leader>fh "xy<CR>:call ExtralHilight(@x)<CR>
 "}}}
 
 " hex model
@@ -845,6 +863,7 @@ let g:ctrlp_use_caching = 1
 let g:OmniSharp_selector_ui = 'ctrlp'  " Use ctrlp.vim
 let g:ctrlp_max_depth = 10
 let g:ctrlp_match_window = 'bottom,order:btt,min:1,max:16,results:16'
+let g:ctrlp_extensions = ['tag', 'buffertag', 'dir', 'rtscript', 'changes' ]
 set wildignore+=*/.git/*,*/.hg/*,*/.svn/*        " Linux/MacOSX
 let g:Omnisharp_start_server = 1
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
