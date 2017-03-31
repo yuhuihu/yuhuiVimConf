@@ -18,7 +18,6 @@ Plugin 'https://github.com/scrooloose/nerdtree.git'
 Plugin 'https://github.com/vimwiki/vimwiki.git'
 Plugin 'https://github.com/vim-scripts/DoxygenToolkit.vim.git'
 Plugin 'https://github.com/scrooloose/syntastic.git'
-Plugin 'https://github.com/itchyny/thumbnail.vim.git'
 "Plugin 'https://github.com/Valloric/YouCompleteMe.git'
 Plugin 'https://github.com/ctrlpvim/ctrlp.vim.git'
 Plugin 'http://git.oschina.net/qiuchangjie/ShaderHighLight'
@@ -27,6 +26,10 @@ Plugin 'https://github.com/nathanaelkane/vim-indent-guides.git'
 Plugin 'https://github.com/tomasr/molokai.git'
 Plugin 'https://github.com/altercation/vim-colors-solarized.git'
 Plugin 'itchyny/calendar.vim'
+Plugin 'flazz/vim-colorschemes'
+Plugin 'airblade/vim-gitgutter'
+"Plugin 'roxma/nvim-completion-manager'
+"Plugin 'roxma/python-support.nvim'
 "Plugin 'git@github.com:Shougo/dein.vim.git'
 "Plugin 'vim-airline/vim-airline'
 "Plugin 'vim-airline/vim-airline-themes'
@@ -108,7 +111,7 @@ if has('gui_running')
 else
   set t_Co=256
   "set background=light
-  colo peachpuff
+  colo primary
 endif
 
 set ttimeoutlen=50
@@ -321,6 +324,7 @@ nmap <silent> <leader>gf :call SearchWordGlobal(input("search: ", expand("<cword
 nmap <silent> <leader>gfw :call SearchWordGlobal(input("search: ", expand("<cword>")), 1)<CR>
 map <silent> <leader>gr :call ReplaceWordGlobal(1, 1)<CR>
 map <silent> <leader>grw :call ReplaceWordGlobal(1, 0)<CR>
+map <silent> <leader>u :e!<CR>
 
 let my_g_extralHilight = ''
 function! ExtralHilight(newkw)
@@ -855,6 +859,10 @@ function! OpenUnityLog()
 	exe ":g/^System\./d"
 endfunction
 nmap <leader>lg :call OpenUnityLog()<CR>
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" omni sharp
+let g:OmniSharp_selector_ui='ctrlp'
+
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " ctrlp
 let g:ctrlp_custom_ignore = '\v[\/]\.(git|hg|svn)$'
@@ -870,6 +878,15 @@ let g:Omnisharp_start_server = 1
 let g:jedi#auto_initialization = 1
 let g:jedi#popup_on_dot = 1
 let g:jedi#auto_close_doc = 1
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" for python completions
+let g:python_support_python3_requirements = add(get(g:,'python_support_python3_requirements',[]),'jedi')
+" language specific completions on markdown file
+let g:python_support_python3_requirements = add(get(g:,'python_support_python3_requirements',[]),'mistune')
+
+" utils, optional
+let g:python_support_python3_requirements = add(get(g:,'python_support_python3_requirements',[]),'psutil')
+let g:python_support_python3_requirements = add(get(g:,'python_support_python3_requirements',[]),'setproctitle')
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " jedi for python 
 """"""""""""""""""""""""""""""""""""""""
