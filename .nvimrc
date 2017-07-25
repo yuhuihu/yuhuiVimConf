@@ -21,13 +21,18 @@ Plugin 'https://github.com/scrooloose/syntastic.git'
 "Plugin 'https://github.com/Valloric/YouCompleteMe.git'
 Plugin 'https://github.com/ctrlpvim/ctrlp.vim.git'
 Plugin 'http://git.oschina.net/qiuchangjie/ShaderHighLight'
-Plugin 'https://github.com/davidhalter/jedi-vim.git'
+"Plugin 'https://github.com/davidhalter/jedi-vim.git'
 Plugin 'https://github.com/nathanaelkane/vim-indent-guides.git'
 Plugin 'https://github.com/tomasr/molokai.git'
 Plugin 'https://github.com/altercation/vim-colors-solarized.git'
+Plugin 'https://github.com/lifepillar/vim-wwdc17-theme.git'
 Plugin 'itchyny/calendar.vim'
-Plugin 'flazz/vim-colorschemes'
+"Plugin 'flazz/vim-colorschemes'
 Plugin 'airblade/vim-gitgutter'
+Plugin 'https://github.com/hotwatermorning/auto-git-diff.git'
+Plugin 'https://github.com/vim-scripts/git-log.git'
+Plugin 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plugin 'junegunn/fzf.vim'
 "Plugin 'roxma/nvim-completion-manager'
 "Plugin 'roxma/python-support.nvim'
 "Plugin 'git@github.com:Shougo/dein.vim.git'
@@ -111,7 +116,7 @@ if has('gui_running')
 else
   set t_Co=256
   "set background=light
-  colo primary
+  colo blue
 endif
 
 set ttimeoutlen=50
@@ -136,25 +141,10 @@ au BufNewFile,BufRead *.frag,*.vert,*.fp,*.vp,*.glsl setf glsl
 set autoread
 set cursorline		"nocursorline ""hilight current line, nocursorline
 set hlsearch
-""set expandtab=0
-set expandtab
-set tabstop=4
-set shiftwidth=4
-set softtabstop=4
 set nu
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" python indent
-autocmd FileType *.py setlocal smartindent cinwords=if,elif,else,for,while,try,except,finally,def,class
-autocmd FileType *.py setlocal tabstop=8
-autocmd FileType *.py setlocal shiftwidth=4
-autocmd FileType *.py setlocal softtabstop=4
-autocmd FileType *.py setlocal autoindent
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " c/cpp indent
-autocmd FileType c,cpp,mm setlocal shiftwidth=4
-autocmd FileType c,cpp,mm setlocal tabstop=4
-autocmd FileType c,cpp,mm setlocal softtabstop=4
 autocmd FileType c,cpp,mm setlocal expandtab
 autocmd FileType c,cpp,mm setlocal textwidth=120
 autocmd FileType c,cpp,mm setlocal wrap
@@ -162,10 +152,11 @@ autocmd FileType c,cpp,mm setlocal cindent
 autocmd FileType c,cpp,mm setlocal cinoptions=h4,l1,g4,t0,i4,+4,(0,w1,W4
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " c#  indent 
-autocmd FileType cs setlocal shiftwidth=4
-autocmd FileType cs setlocal tabstop=4
-autocmd FileType cs setlocal softtabstop=4
 autocmd FileType cs setlocal expandtab
+autocmd FileType cs setlocal tabstop=4
+autocmd FileType cs setlocal shiftwidth=4
+autocmd FileType cs setlocal softtabstop=4
+autocmd FileType cs setlocal autoindent
 autocmd FileType cs setlocal textwidth=120
 autocmd FileType cs setlocal wrap
 autocmd FileType cs setlocal cindent
@@ -173,6 +164,12 @@ autocmd FileType cs setlocal cinoptions=f4,>4,h4,l1,g4,t0,i4,+4,(0,w1,W4
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " python indent
+autocmd FileType *.py setlocal set expandtab
+autocmd FileType *.py setlocal tabstop=4
+autocmd FileType *.py setlocal shiftwidth=4
+autocmd FileType *.py setlocal softtabstop=4
+autocmd FileType *.py setlocal autoindent
+autocmd FileType *.py setlocal smartindent cinwords=if,elif,else,for,while,try,except,finally,def,class
 autocmd FileType python set makeprg=python\ -c\ \"import\ py_compile,sys;\ sys.stderr=sys.stdout;\ py_compile.compile(r'%')\"
 autocmd FileType python set efm=%C\ %.%#,%A\ \ File\ \"%f\"\\,\ line\ %l%.%#,%Z%[%^\ ]%\\@=%m
 autocmd FileType python nmap <F5> :!python %<CR>
@@ -710,6 +707,8 @@ nmap <leader>cs :SCROLL<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " OmniSharp won't work without this setting
 " filetype plugin on
+let g:Omnisharp_start_server = 1
+let g:OmniSharp_selector_ui = 'ctrlp'  " Use ctrlp.vim
 
 "This is the default value, setting it isn't actually necessary
 let g:OmniSharp_host = "http://localhost:2000"
@@ -744,7 +743,7 @@ set completeopt=longest,menuone,preview
 set splitbelow
 
 " Get Code Issues and syntax errors
-let g:syntastic_cs_checkers = ['syntax', 'semantic', 'issues']
+let g:syntastic_cs_checkers = ['syntax', 'semantic']			", 'issues']
 " If you are using the omnisharp-roslyn backend, use the following
 " let g:syntastic_cs_checkers = ['code_checker']
 augroup omnisharp_commands
@@ -756,7 +755,7 @@ augroup omnisharp_commands
     " Synchronous build (blocks Vim)
     "autocmd FileType cs nnoremap <F5> :wa!<cr>:OmniSharpBuild<cr>
     " Builds can also run asynchronously with vim-dispatch installed
-    autocmd FileType cs nnoremap <leader>b :wa!<cr>:OmniSharpBuildAsync<cr>
+    " autocmd FileType cs nnoremap <leader>b :wa!<cr>:OmniSharpBuildAsync<cr>
     " automatic syntax check on events (TextChanged requires Vim 7.4)
     " autocmd BufEnter,TextChanged,InsertLeave *.cs SyntasticCheck
 
@@ -769,21 +768,21 @@ augroup omnisharp_commands
     "The following commands are contextual, based on the current cursor position.
 
     autocmd FileType cs nnoremap gd :OmniSharpGotoDefinition<cr>
-    autocmd FileType cs nnoremap <leader>fi :OmniSharpFindImplementations<cr>
+    " autocmd FileType cs nnoremap <leader>fi :OmniSharpFindImplementations<cr>
     autocmd FileType cs nnoremap <leader>ft :OmniSharpFindType<cr>
     autocmd FileType cs nnoremap <leader>fs :OmniSharpFindSymbol<cr>
     autocmd FileType cs nnoremap <leader>fu :OmniSharpFindUsages<cr>
     "finds members in the current buffer
-    autocmd FileType cs nnoremap <leader>fm :OmniSharpFindMembers<cr>
+    "  FileType cs nnoremap <leader>fm :OmniSharpFindMembers<cr>
     " cursor can be anywhere on the line containing an issue
-    autocmd FileType cs nnoremap <leader>x  :OmniSharpFixIssue<cr>
-    autocmd FileType cs nnoremap <leader>fx :OmniSharpFixUsings<cr>
+    "  FileType cs nnoremap <leader>x  :OmniSharpFixIssue<cr>
+    "  FileType cs nnoremap <leader>fx :OmniSharpFixUsings<cr>
     autocmd FileType cs nnoremap <leader>tt :OmniSharpTypeLookup<cr>
-    autocmd FileType cs nnoremap <leader>dc :OmniSharpDocumentation<cr>
+    "     autocmd FileType cs nnoremap <leader>dc :OmniSharpDocumentation<cr>
     "navigate up by method/property/field
-    autocmd FileType cs nnoremap <C-K> :OmniSharpNavigateUp<cr>
+    " autocmd FileType cs nnoremap <C-K> :OmniSharpNavigateUp<cr>
     "navigate down by method/property/field
-    autocmd FileType cs nnoremap <C-J> :OmniSharpNavigateDown<cr>
+    " autocmd FileType cs nnoremap <C-J> :OmniSharpNavigateDown<cr>
 
 augroup END
 
@@ -799,34 +798,35 @@ set cmdheight=2
 " vnoremap <leader><space> :call OmniSharp#GetCodeActions('visual')<cr>
 
 " rename with dialog
-nnoremap <leader>nm :OmniSharpRename<cr>
+"  <leader>nm :OmniSharpRename<cr>
 " nnoremap <F2> :OmniSharpRename<cr>
 " rename without dialog - with cursor on the symbol to rename... ':Rename newname'
-command! -nargs=1 Rename :call OmniSharp#RenameTo("<args>")
+" ! -nargs=1 Rename :call OmniSharp#RenameTo("<args>")
 
 " Force OmniSharp to reload the solution. Useful when switching branches etc.
-nnoremap <leader>rl :OmniSharpReloadSolution<cr>
-nnoremap <leader>cf :OmniSharpCodeFormat<cr>
+"  <leader>rl :OmniSharpReloadSolution<cr>
+" nnoremap <leader>cf :OmniSharpCodeFormat<cr>
 " Load the current .cs file to the nearest project
-nnoremap <leader>tp :OmniSharpAddToProject<cr>
+"  <leader>tp :OmniSharpAddToProject<cr>
 
 " (Experimental - uses vim-dispatch or vimproc plugin) - Start the omnisharp server for the current solution
-nnoremap <leader>ss :OmniSharpStartServer<cr>
-nnoremap <leader>sp :OmniSharpStopServer<cr>
+"  <leader>ss :OmniSharpStartServer<cr>
+"  <leader>sp :OmniSharpStopServer<cr>
 
 " Add syntax highlighting for types and interfaces
 nnoremap <leader>th :OmniSharpHighlightTypes<cr>
 "Don't ask to save when changing buffers (i.e. when jumping to a type definition)
 set hidden
 
+" auto refresh log file
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " thumbnail
-nnoremap <leader><tab> :Thumbnail<cr>
+" nnoremap <leader><tab> :Thumbnail<cr>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " unity lo
 let g:nvim_unity_log_linenum = 0
-function! OpenUnityLog()
-	let logfileName = "/Users/yuhui/Library/Logs/Unity/Editor.log"
+function! OpenUnityLog() 
+    let logfileName = expand("~/Library/Logs/Unity/Editor.log")
     print "begin sync unity log..."
     try 
         exe "tabfind " . "unity_log_buf"
@@ -866,18 +866,26 @@ let g:OmniSharp_selector_ui='ctrlp'
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " ctrlp
 let g:ctrlp_custom_ignore = '\v[\/]\.(git|hg|svn)$'
-let g:ctrlp_regexp = 1
+"let g:ctrlp_regexp = 1
+let g:ctrlp_working_path_mode = 'w'
 let g:ctrlp_use_caching = 1
-let g:OmniSharp_selector_ui = 'ctrlp'  " Use ctrlp.vim
-let g:ctrlp_max_depth = 10
+let g:ctrlp_clear_cache_on_exit = 0
+let g:ctrlp_max_depth = 20
+let g:ctrlp_by_filename = 1
 let g:ctrlp_match_window = 'bottom,order:btt,min:1,max:16,results:16'
 let g:ctrlp_extensions = ['tag', 'buffertag', 'dir', 'rtscript', 'changes' ]
-set wildignore+=*/.git/*,*/.hg/*,*/.svn/*        " Linux/MacOSX
-let g:Omnisharp_start_server = 1
+set wildignore+=*/.git/*,*/.hg/*,*/.svn/*,*/*.meta,*/*.o,*/*.obj,*/*.png,*/*.jpg,*/*.asset,*/*.prefab,*/*.dll        " Linux/MacOSX
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" jedi for python 
+""""""""""""""""""""""""""""""""""""""""
+" for indent 
+let g:indent_guides_enable_on_vim_startup=1
+let g:indent_guides_start_level=2
+let g:indent_guides_guide_size=1
 let g:jedi#auto_initialization = 1
 let g:jedi#popup_on_dot = 1
 let g:jedi#auto_close_doc = 1
+"let g:jedi#completions_command = "<C-N>"
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " for python completions
 let g:python_support_python3_requirements = add(get(g:,'python_support_python3_requirements',[]),'jedi')
@@ -887,13 +895,6 @@ let g:python_support_python3_requirements = add(get(g:,'python_support_python3_r
 " utils, optional
 let g:python_support_python3_requirements = add(get(g:,'python_support_python3_requirements',[]),'psutil')
 let g:python_support_python3_requirements = add(get(g:,'python_support_python3_requirements',[]),'setproctitle')
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" jedi for python 
-""""""""""""""""""""""""""""""""""""""""
-" for indent 
-let g:indent_guides_enable_on_vim_startup=1
-let g:indent_guides_start_level=2
-let g:indent_guides_guide_size=1
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " syntastic
 set statusline+=%#warningmsg#
@@ -911,3 +912,47 @@ let g:syntastic_check_on_wq = 0
 " let g:airline#extensions#ctrlp#color_template = 'visual'
 " let g:airline#extensions#ctrlp#color_template = 'replace'
 " 
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" git log
+let g:GITLOG_default_mode = 2
+map <silent> <f7> :call GITLOG_ToggleWindows()<cr>
+map <silent> <f8> :call GITLOG_FlipWindows()<cr>
+let g:GITLOG_ignore_suffixes=['swp', 'swn', 'pyc', 'o', 'zip', 'tgz', 'gz']
+let g:GITLOG_ignore_directories = ['.git', 'out']
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" fzf
+" This is the default extra key bindings
+let g:fzf_action = {
+  \ 'ctrl-t': 'tab split',
+  \ 'ctrl-x': 'split',
+  \ 'ctrl-v': 'vsplit' }
+
+" Default fzf layout
+" - down / up / left / right
+let g:fzf_layout = { 'down': '~40%' }
+
+" In Neovim, you can set up fzf window using a Vim command
+let g:fzf_layout = { 'window': 'enew' }
+let g:fzf_layout = { 'window': '-tabnew' }
+
+" Customize fzf colors to match your color scheme
+let g:fzf_colors =
+\ { 'fg':      ['fg', 'Normal'],
+  \ 'bg':      ['bg', 'Normal'],
+  \ 'hl':      ['fg', 'Comment'],
+  \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
+  \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
+  \ 'hl+':     ['fg', 'Statement'],
+  \ 'info':    ['fg', 'PreProc'],
+  \ 'prompt':  ['fg', 'Conditional'],
+  \ 'pointer': ['fg', 'Exception'],
+  \ 'marker':  ['fg', 'Keyword'],
+  \ 'spinner': ['fg', 'Label'],
+  \ 'header':  ['fg', 'Comment'] }
+
+" Enable per-command history.
+" CTRL-N and CTRL-P will be automatically bound to next-history and
+" previous-history instead of down and up. If you don't like the change,
+" explicitly bind the keys to down and up in your $FZF_DEFAULT_OPTS.
+let g:fzf_history_dir = '~/.local/share/fzf-history'
