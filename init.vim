@@ -8,20 +8,21 @@ Plug 'https://github.com/scrooloose/nerdtree.git'
 Plug 'https://github.com/majutsushi/tagbar.git'
 Plug 'https://github.com/vimwiki/vimwiki.git'
 Plug 'https://github.com/vim-scripts/TagHighlight.git'
-Plug 'https://github.com/doxygen/doxygen.git'
-Plug 'https://github.com/OmniSharp/omnisharp-vim.git'
 Plug 'https://github.com/tpope/vim-dispatch.git'
-Plug 'https://github.com/Shougo/neocomplete.vim.git'
 Plug 'https://github.com/vim-scripts/DrawIt.git'
 Plug 'https://github.com/vim-scripts/DoxygenToolkit.vim.git'
 Plug 'https://github.com/vim-scripts/ScrollColors.git'
 Plug 'https://github.com/scrooloose/syntastic.git'
 Plug 'https://github.com/kien/ctrlp.vim.git'
-"Plug 'https://github.com/davidhalter/jedi-vim.git'
 Plug 'https://github.com/hzchirs/vim-material.git'
-Plug 'Shougo/deoplete.nvim'
-Plug 'zchee/deoplete-clang'
-Plug 'zchee/deoplete-jedi'
+Plug 'https://github.com/OmniSharp/omnisharp-vim.git'
+Plug 'airblade/vim-gitgutter'
+Plug 'https://github.com/tpope/vim-fugitive.git'
+Plug 'https://github.com/nathanaelkane/vim-indent-guides.git'
+Plug 'roxma/nvim-completion-manager'
+Plug 'https://github.com/beigebrucewayne/min_solo.git'
+Plug 'https://github.com/fhrach4/neo-jungle256.git'
+
 call plug#end()
 
 set diffexpr=MyDiff()"{{{
@@ -64,6 +65,12 @@ set foldmethod=marker
 set tabstop=4
 set shiftwidth=4
 set softtabstop=4
+set nowrap
+set expandtab
+hi IndentGuidesOdd  ctermbg=white
+hi IndentGuidesEven ctermbg=lightgrey
+let g:indent_guides_auto_colors=1
+let g:indent_guides_enable_on_vim_startup = 1
 
 " session"{{{
 function! SaveSession()
@@ -109,24 +116,25 @@ autocmd FileType python set tabstop=4
 autocmd FileType python set go+=b
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " comment line."
-function! CommentLine()
-  let commentPrefix = '//'
-  let commentPattern = '^\s*\t*' . commentPrefix
+function! CommentLine(commentPrefix)
+  " let commentPrefix = '//'
+  let commentPattern = '^\s*\t*' . a:commentPrefix
   let line = getline('.')
   if strlen(substitute(line, "[\s\t]", "", "")) < 1
     return
   endif
   if line =~ commentPattern
-    let idx = stridx(line, commentPrefix[0], 0)
+    let idx = stridx(line, a:commentPrefix[0], 0)
     let newline = strpart(line, 0, idx) 
-    let newline = newline . strpart(line, idx + strlen(commentPrefix), strlen(line) - strlen(commentPrefix))
+    let newline = newline . strpart(line, idx + strlen(a:commentPrefix), strlen(line) - strlen(a:commentPrefix))
     call setline('.', newline)
   else
-    let newline = commentPrefix . line
+    let newline = a:commentPrefix . line
     call setline('.', newline)
   endif
 endfunction
-autocmd FileType c,cpp,cs map tm :call CommentLine()<CR>
+autocmd FileType c,cpp,cs map tm :call CommentLine('//')<CR>
+autocmd FileType python map tm :call CommentLine('#')<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "Doxygen"{{{
 " nmap <leader>dc :Dox<CR>
@@ -160,7 +168,7 @@ function! SearchWordGlobal(vw, matchWord)
 	if strlen( g:g_my_search_path) < 1
 		let g:g_my_search_path = expand("%:h") . '**/*'
 	endif
-	let g:g_my_search_path = input("search [" . cw . "]: ",  g:g_my_search_path, "dir")
+	let g:g_my_search_path = input("search [" . cw . "] in dir(regx): ",  g:g_my_search_path, "dir")
 	exe "vimgrep " . cw . " " . g:g_my_search_path . ""
 	exe ":cw"
 	let qflst = getqflist()
@@ -187,18 +195,26 @@ function! ReplaceWordGlobal( noConfirm, matchWord)
 	else
 		let replaceCmd=  replaceCmd . "/gc"
 	endif
-	call inputrestore();
+	call inputrestore()
+	let bufnums = []
 	for qf in getqflist()
-		exe ":b" . qf.bufnr
+		if index(bufnums, qf.bufnr) > -1 
+			continue
+		endif
+		call add( bufnums, qf.bufnr )
+	endfor
+	echo 'fuck'  bufnums
+	for bufnum in bufnums
+		exe ":b" . bufnum
 		exe replaceCmd
 	endfor
 endfunction
-vmap <silent> tgf "xy<CR>:call SearchWordGlobal(@x, 0)<CR>
-vmap <silent> tgfw "xy<CR>:call SearchWordGlobal(@x, 1)<CR>
-nmap <silent> tgf :call SearchWordGlobal(input("search: ", expand("<cword>")), 0)<CR>
-nmap <silent> tgfw :call SearchWordGlobal(input("search: ", expand("<cword>")), 1)<CR>
-nmap <silent> tgr :call ReplaceWordGlobal(1, 0)<CR>
-nmap <silent> tgrw :call ReplaceWordGlobal(1, 1)<CR>
+vmap <silent> <leader>gf "xy<CR>:call SearchWordGlobal(@x, 0)<CR>
+vmap <silent> <leader>gfw "xy<CR>:call SearchWordGlobal(@x, 1)<CR>
+nmap <silent> <leader>gf :call SearchWordGlobal(input("search: ", expand("<cword>")), 0)<CR>
+nmap <silent> <leader>gfw :call SearchWordGlobal(input("search: ", expand("<cword>")), 1)<CR>
+nmap <silent> <leader>gr :call ReplaceWordGlobal(1, 0)<CR>
+nmap <silent> <leader>grw :call ReplaceWordGlobal(1, 1)<CR>
 "}}}
 " find word in correspond file
 "function! SearchWordInCorrespondFile()
@@ -298,7 +314,7 @@ set guioptions-=T
 set guioptions-=m
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "file encoding
-set fileencodings=utf8,ucs-bom,gbk,cp936
+set fileencodings=utf8,ucs-bom,gbk,cp936,gb18030
 "set termencoding=utf-8,gbk,ucs-bom
 "set encoding=utf-8
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -312,6 +328,7 @@ nnoremap <silent> <F2> :let curPath =expand("%:h:p")<Bar> exe "NERDTree " . (len
 "}}}
 
 """"""""""""""""""""""""""""""""""""""""""" ctags"{{{
+let g:tagbar_left = 1
 nnoremap <silent> T :TagbarToggle<CR>
 "autocmd FileType c,cpp,h,hpp nnoremap ttf: ts expand("<cword>")<CR>
 autocmd FileType c,cpp,h,hpp nnoremap ttn: tn<CR>
@@ -493,7 +510,7 @@ augroup omnisharp_commands
 	" Builds can also run asynchronously with vim-dispatch installed
 	autocmd FileType cs nnoremap <leader>b :wa!<cr>:OmniSharpBuildAsync<cr>
 	" automatic syntax check on events (TextChanged requires Vim 7.4)
-	"autocmd BufEnter,TextChanged,InsertLeave *.cs SyntasticCheck
+	autocmd BufEnter,TextChanged,InsertLeave *.cs SyntasticCheck
 
 	" Automatically add new cs files to the nearest project on save
 	autocmd BufWritePost *.cs call OmniSharp#AddToProject()
@@ -506,7 +523,7 @@ augroup omnisharp_commands
 	autocmd FileType cs nnoremap gd :OmniSharpGotoDefinition<cr>
 	" autocmd FileType cs nnoremap <leader>fi :OmniSharpFindImplementations<cr>
 	" autocmd FileType cs nnoremap <leader>ft :OmniSharpFindType<cr>
-	" autocmd FileType cs nnoremap <leader>fs :OmniSharpFindSymbol<cr>
+	autocmd FileType cs nnoremap <leader>fs :OmniSharpFindSymbol<cr>
 	" autocmd FileType cs nnoremap <leader>fu :OmniSharpFindUsages<cr>
 	" autocmd FileType cs nnoremap <leader>fm :OmniSharpFindMembers<cr> "finds members in the current buffer
 	" cursor can be anywhere on the line containing an issue 
