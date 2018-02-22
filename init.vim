@@ -8,22 +8,25 @@ Plug 'https://github.com/scrooloose/nerdtree.git'
 Plug 'https://github.com/majutsushi/tagbar.git'
 Plug 'https://github.com/vimwiki/vimwiki.git'
 Plug 'https://github.com/vim-scripts/TagHighlight.git'
-Plug 'https://github.com/tpope/vim-dispatch.git'
-Plug 'https://github.com/vim-scripts/DrawIt.git'
 Plug 'https://github.com/vim-scripts/DoxygenToolkit.vim.git'
 Plug 'https://github.com/vim-scripts/ScrollColors.git'
 Plug 'https://github.com/scrooloose/syntastic.git'
 Plug 'https://github.com/kien/ctrlp.vim.git'
-Plug 'https://github.com/hzchirs/vim-material.git'
 Plug 'https://github.com/OmniSharp/omnisharp-vim.git'
 Plug 'airblade/vim-gitgutter'
 Plug 'https://github.com/tpope/vim-fugitive.git'
 Plug 'https://github.com/nathanaelkane/vim-indent-guides.git'
-Plug 'roxma/nvim-completion-manager'
+Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'https://github.com/zchee/deoplete-jedi.git'
+"""color scheme
+Plug 'https://github.com/hzchirs/vim-material.git'
 Plug 'https://github.com/beigebrucewayne/min_solo.git'
 Plug 'https://github.com/fhrach4/neo-jungle256.git'
 
 call plug#end()
+
+let g:python2_host_prog = '/usr/local/bin/python2.7'
+let g:python3_host_prog = '/usr/local/bin/python3.6'
 
 set diffexpr=MyDiff()"{{{
 function! MyDiff()
@@ -134,7 +137,7 @@ function! CommentLine(commentPrefix)
   endif
 endfunction
 autocmd FileType c,cpp,cs map tm :call CommentLine('//')<CR>
-autocmd FileType python map tm :call CommentLine('#')<CR>
+autocmd FileType py map tm :call CommentLine('#')<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "Doxygen"{{{
 " nmap <leader>dc :Dox<CR>
@@ -453,6 +456,7 @@ nmap <leader>lg :call OpenUnityLog()<CR>
 " deoplete jedi
 let g:deoplete#sources#jedi#enable_cache = 1
 let g:deoplete#enable_at_startup = 1
+let g:deoplete#auto_complete_start_length = 1
 " deplete clang 
 let g:deoplete#sources#clang#libclang_path = "/usr/local/Cellar/llvm/4.0.1/lib/libclang.dylib"
 let g:deoplete#sources#clang#clang_header = "/usr/local/Cellar/llvm/4.0.1/lib/clang"
@@ -470,7 +474,9 @@ let g:OmniSharp_host = "http://localhost:2000"
 let g:OmniSharp_typeLookupInPreview = 0
 
 "Timeout in seconds to wait for a response from the server
-let g:OmniSharp_timeout = 1
+let g:OmniSharp_timeout = 2
+let g:Omnisharp_start_server=1
+let g:OmniSharp_selector_ui='ctrlp'
 
 "Showmatch significantly slows down omnicomplete
 "when the first match contains parentheses.
@@ -491,7 +497,6 @@ set completeopt=longest,menuone,preview
 " you need it with the :OmniSharpDocumentation command.
 let g:omnicomplete_fetch_documentation=1
 
-let g:OmniSharp_selector_ui='ctrlp'
 "Move the preview window (code documentation) to the bottom of the screen, so it doesn't move the code!
 "You might also want to look at the echodoc plugin
 set splitbelow
