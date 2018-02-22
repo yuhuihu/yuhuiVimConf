@@ -1,23 +1,14 @@
 set nocompatible 
 filetype off                  " required
 
-set rtp+=~/Vimfiles/bundle/Vundle.vim
+set rtp+=~\Vimfiles\bundle\Vundle.vim
 " let  path='~/vimfiles/bundle'
 call vundle#begin()
-Plugin 'https://github.com/scrooloose/nerdtree.git'
+"Plugin 'https://github.com/scrooloose/nerdtree.git'
 Plugin 'https://github.com/majutsushi/tagbar.git'
-Plugin 'https://github.com/vimwiki/vimwiki.git'
-Plugin 'https://github.com/vim-scripts/TagHighlight.git'
 Plugin 'https://github.com/doxygen/doxygen.git'
-Plugin 'https://github.com/OmniSharp/omnisharp-vim.git'
-Plugin 'https://github.com/tpope/vim-dispatch.git'
-Plugin 'https://github.com/Shougo/neocomplete.vim.git'
-Plugin 'https://github.com/vim-scripts/DrawIt.git'
-Plugin 'https://github.com/vim-scripts/DoxygenToolkit.vim.git'
-Plugin 'https://github.com/rom399/vim-colorsheme-scroller.git'
-Plugin 'https://github.com/itchyny/thumbnail.vim.git'
-Plugin 'https://github.com/scrooloose/syntastic.git'
-Plugin 'https://github.com/kien/ctrlp.vim.git'
+"Plugin 'https://github.com/OmniSharp/omnisharp-vim.git'
+"Plugin 'https://github.com/kien/ctrlp.vim.git'
 call vundle#end()
 
 set diffexpr=MyDiff()"{{{
@@ -49,11 +40,12 @@ endfunction
 syntax on
 set autoread
 set cursorline		""hilight current line
-colo herokudoc
+colo solarized
 set guifont=Lucida\ Console:h12:w7
 set nu
 filetype on
 filetype plugin indent on
+filetype plugin on
 set hlsearch
 ""set expandtab=0
 set foldmethod=marker
@@ -66,7 +58,7 @@ function! SaveSession()
 	let ch = confirm("save session ?", "&Yes\n&No", 1)
 	if ch == 1
 		exe ":wa"
-		exe "mksession!"
+		exe "mksession! ~\\Session.vim"
 	else
 		echo "save session cancle."
 	endif
@@ -79,12 +71,12 @@ function! LoadSession(confirmed)
 		let aconf = confirm("load last session ?", "&Yes\n&No", 1)
 	endif
 	if aconf == 1
-		exe ":so Session.vim"
+		exe ":so ~\\Session.vim"
 	else
 		echo "load seesion cancled."
 	endif
 endfunction
-nmap <F4> :call LoadSession()<CR>
+nmap <F4> :call LoadSession(0)<CR>
 "}}}
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " c/cpp indent
@@ -301,9 +293,11 @@ set fileencodings=utf8,ucs-bom,gbk,cp936
 set laststatus=2
 set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('%s','','')}\ %=%B@%O\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
 
+set wildignore+=*\\tmp\\*,*.swp,*.zip,*.exe  " Windows
+
 """"""""""""""""""""""""""""""for NERDTree"{{{
 " >> auto change current directory to current openning file.
-nnoremap <silent> <F2> :let curPath =expand("%:h:p")<Bar> exe "NERDTree " . (len(curPath)<1 ?  "." : curPath)<CR>
+nnoremap <silent> <F2> :let curPath ="c:" . expand("%:h")<Bar> exe "NERDTree " . (len(curPath)<1 ?  "." : curPath)<CR>
 "}}}
 
 """"""""""""""""""""""""""""""""""""""""""" ctags"{{{
@@ -399,22 +393,42 @@ nmap <silent> tcf :call CscopeFind(input("search: ", expand("<cword>"), "tag"))<
 nmap <silent> <leader><tab> :Thumbnail<CR>
 "" ctrl p
 let g:ctrlp_regexp = 1
+let g:ctrlp_max_files = 0
 let g:ctrlp_custom_ignore = {
 			\ 'dir':  '\v[\/]\.(git|hg|svn)$',
-			\ 'file': '\v\.(exe|so|dll|html|js|obj)$',
+			\ 'file': '\v\.(exe|so|dll|html|js|obj|lnk|jpg|png|meta|asset|pyc|prefab)$',
 			\ 'link': 'SOME_BAD_SYMBOLIC_LINKS',
 			\ }
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" color scroll
-nmap <silent> <leader>cs :SCROLL<CR>
+let g:ctrlp_cache_dir = $HOME.'/.ctrp_cache/ctrlp'
+let g:ctrlp_abbrev = {
+	\ 'gmode': 'i',
+	\ 'abbrevs': [
+	  \ {
+		\ 'pattern': '^cd b',
+		\ 'expanded': '@cd ~/.vim/bundle',
+		\ 'mode': 'pfrz',
+	  \ },
+	  \ {
+		\ 'pattern': '\(^@.\+\|\\\@<!:.\+\)\@<! ',
+		\ 'expanded': '.\{-}',
+		\ 'mode': 'pfr',
+	  \ },
+	  \ {
+		\ 'pattern': '\\\@<!:.\+\zs\\\@<! ',
+		\ 'expanded': '\ ',
+		\ 'mode': 'pfz',
+	  \ },
+	  \ ]
+\ }
+
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " omnisharp
 "
 " OmniSharp won't work without this setting
-filetype plugin on
 
 "This is the default value, setting it isn't actually necessary
 let g:OmniSharp_host = "http://localhost:2000"
+let g:Omnisharp_start_server=1
 
 "Set the type lookup function to use the preview window instead of the status line
 let g:OmniSharp_typeLookupInPreview = 0
@@ -425,6 +439,7 @@ let g:OmniSharp_timeout = 1
 "Showmatch significantly slows down omnicomplete
 "when the first match contains parentheses.
 set noshowmatch
+let g:OmniSharp_selector_ui='ctrlp'
 
 "Super tab settings - uncomment the next 4 lines
 "let g:SuperTabDefaultCompletionType = 'context'
@@ -520,7 +535,8 @@ nmap <leader><space> <Plug>VimwikiToggleListItem
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " unity log
 function! OpenUnityLog()
-	let logfileName = "~/AppData/Local/Unity/Editor/Editor.log"
+	" let logfileName = "~/AppData/Local/Unity/Editor/Editor.log"
+	let logfileName = expand("~\\AppData\\Local\\Unity\\Editor\\Editor.log")
 	exe "tabfind " . logfileName
 	exe ":g/^(Filename:/d"
 	exe ":g/^UnityEngine\\./d"
