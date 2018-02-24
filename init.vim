@@ -2,7 +2,6 @@ set nocompatible
 " Specify a directory for plugins
 " - For Neovim: ~/.local/share/nvim/plugged
 " - Avoid using standard Vim directory names like 'plugin'
-set runtimepath+=~/.local/share/nvim
 call plug#begin('~/.local/share/nvim/plugged')
 Plug 'https://github.com/scrooloose/nerdtree.git'
 Plug 'https://github.com/majutsushi/tagbar.git'
@@ -18,6 +17,9 @@ Plug 'https://github.com/tpope/vim-fugitive.git'
 Plug 'https://github.com/nathanaelkane/vim-indent-guides.git'
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'https://github.com/zchee/deoplete-jedi.git'
+Plug 'https://github.com/OrangeT/vim-csharp.git'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
 """color scheme
 Plug 'https://github.com/hzchirs/vim-material.git'
 Plug 'https://github.com/beigebrucewayne/min_solo.git'
@@ -58,6 +60,7 @@ syntax on
 set autoread
 set cursorline		""hilight current line
 colo shine
+set background=dark
 set guifont=Lucida\ Console:h12:w7
 set nu
 filetype on
@@ -172,7 +175,7 @@ function! SearchWordGlobal(vw, matchWord)
 		let g:g_my_search_path = expand("%:h") . '**/*'
 	endif
 	let g:g_my_search_path = input("search [" . cw . "] in dir(regx): ",  g:g_my_search_path, "dir")
-	exe "vimgrep " . cw . " " . g:g_my_search_path . ""
+	exe "noautocmd vimgrep " . cw . " " . g:g_my_search_path . ""
 	exe ":cw"
 	let qflst = getqflist()
 	let g:g_my_search_replace_all = len(qflst) > 0
@@ -323,7 +326,7 @@ set fileencodings=utf8,ucs-bom,gbk,cp936,gb18030
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " status line
 set laststatus=2
-set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('%s','','')}\ %=%B@%O\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
+"set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('%s','','')}\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
 
 """"""""""""""""""""""""""""""for NERDTree"{{{
 " >> auto change current directory to current openning file.
@@ -420,17 +423,28 @@ endfunction
 vmap <silent> tcf "xy<CR>:call CscopeFind(@x)<CR>
 nmap <silent> tcf :call CscopeFind(input("search: ", expand("<cword>"), "tag"))<CR>
 "}}}
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "" ctrl p
+if executable('ag')
+  " Use Ag over Grep
+  set grepprg=ag\ --nogroup\ --nocolor\ --ignore\ *.meta
+
+  " Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
+  " let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
+  let g:ctrlp_user_command = 'ag %s -l --nocolor --hidden -g ""'
+endif
 let g:ctrlp_max_files=0
 " let g:ctrlp_regexp = 1
 let g:ctrlp_by_filename = 1
 let g:ctrlp_use_caching = 1
+let g:ctrlp_cache_dir = '~/.ctrp_cache/ctrlp'
 let g:ctrlp_extensions = ['tag', 'buffertag', 'bookmarkdir']
 let g:ctrlp_custom_ignore = {
 			\ 'dir':  '\v[\/]\.(git|hg|svn)$',
-			\ 'file': '\v\.(exe|so|dll|html|js|obj|meta|jpg|gif|png|jpeg|tiff|o)$',
+			\ 'file': '\v\.(exe|so|dll|html|js|obj|meta|jpg|gif|png|jpeg|tiff|o|meta|prefab|asset|pyc)$',
 			\ 'link': 'SOME_BAD_SYMBOLIC_LINKS',
 			\ }
+" Use The Silver Searcher https://github.com/ggreer/the_silver_searcher
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " color scroll
 nmap <silent> <leader>cs :SCROLL<CR>
@@ -515,7 +529,7 @@ augroup omnisharp_commands
 	" Builds can also run asynchronously with vim-dispatch installed
 	autocmd FileType cs nnoremap <leader>b :wa!<cr>:OmniSharpBuildAsync<cr>
 	" automatic syntax check on events (TextChanged requires Vim 7.4)
-	autocmd BufEnter,TextChanged,InsertLeave *.cs SyntasticCheck
+	" autocmd BufEnter,TextChanged,InsertLeave *.cs SyntasticCheck
 
 	" Automatically add new cs files to the nearest project on save
 	autocmd BufWritePost *.cs call OmniSharp#AddToProject()
@@ -529,7 +543,7 @@ augroup omnisharp_commands
 	" autocmd FileType cs nnoremap <leader>fi :OmniSharpFindImplementations<cr>
 	" autocmd FileType cs nnoremap <leader>ft :OmniSharpFindType<cr>
 	autocmd FileType cs nnoremap <leader>fs :OmniSharpFindSymbol<cr>
-	" autocmd FileType cs nnoremap <leader>fu :OmniSharpFindUsages<cr>
+	autocmd FileType cs nnoremap <leader>fu :OmniSharpFindUsages<cr>
 	" autocmd FileType cs nnoremap <leader>fm :OmniSharpFindMembers<cr> "finds members in the current buffer
 	" cursor can be anywhere on the line containing an issue 
 	" autocmd FileType cs nnoremap <leader>x  :OmniSharpFixIssue<cr>  
