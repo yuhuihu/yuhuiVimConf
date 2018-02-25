@@ -20,6 +20,7 @@ Plug 'https://github.com/zchee/deoplete-jedi.git'
 Plug 'https://github.com/OrangeT/vim-csharp.git'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
+Plug 'airblade/vim-gitgutter'
 """color scheme
 Plug 'https://github.com/hzchirs/vim-material.git'
 Plug 'https://github.com/beigebrucewayne/min_solo.git'
