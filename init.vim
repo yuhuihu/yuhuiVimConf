@@ -136,7 +136,7 @@ function! DebugPython()
         exe "w!"
     endif
     sp
-    " exe 'terminal python3 ' . g:g_my_python_debug
+     exe 'terminal python3 ' . g:g_my_python_debug
 endfunction
 autocmd! FileType python nmap <F9> :call DebugPython()<CR>
 
