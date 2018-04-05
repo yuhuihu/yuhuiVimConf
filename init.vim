@@ -12,15 +12,16 @@ Plug 'https://github.com/vim-scripts/ScrollColors.git'
 Plug 'https://github.com/scrooloose/syntastic.git'
 Plug 'https://github.com/kien/ctrlp.vim.git'
 Plug 'https://github.com/OmniSharp/omnisharp-vim.git'
-Plug 'airblade/vim-gitgutter'
 Plug 'https://github.com/tpope/vim-fugitive.git'
-Plug 'https://github.com/nathanaelkane/vim-indent-guides.git'
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'https://github.com/davidhalter/jedi-vim.git'
 Plug 'https://github.com/zchee/deoplete-jedi.git'
 Plug 'https://github.com/OrangeT/vim-csharp.git'
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
 Plug 'airblade/vim-gitgutter'
+Plug 'https://github.com/Yggdroot/indentLine.git'
+Plug 'https://github.com/heavenshell/vim-pydocstring.git'
+Plug 'https://github.com/skywind3000/asyncrun.vim.git'
+"" Plug 'https://github.com/nvie/vim-flake8.git'
 """color scheme
 Plug 'https://github.com/hzchirs/vim-material.git'
 Plug 'https://github.com/beigebrucewayne/min_solo.git'
@@ -60,24 +61,27 @@ endfunction
 syntax on
 set autoread
 set cursorline		""hilight current line
-colo shine
+colo vim-material     
 set background=dark
-set guifont=Lucida\ Console:h12:w7
+set guifont=Monaco\ Console:h12:w7
 set nu
 filetype on
 filetype plugin indent on
 set hlsearch
-""set expandtab=0
 set foldmethod=marker
 set tabstop=4
 set shiftwidth=4
 set softtabstop=4
 set nowrap
 set expandtab
-hi IndentGuidesOdd  ctermbg=white
-hi IndentGuidesEven ctermbg=lightgrey
-let g:indent_guides_auto_colors=1
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" vim indent color
+hi IndentGuidesOdd  ctermbg=lightgrey
+hi IndentGuidesEven ctermbg=darkgrey
 let g:indent_guides_enable_on_vim_startup = 1
+let g:indent_guides_auto_colors = 1
+"autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=red   ctermbg=3
+"autocmd VimEnter,Colorscheme * :hi IndentGuidesEven guibg=green ctermbg=4
 
 " session"{{{
 function! SaveSession()
@@ -118,13 +122,32 @@ autocmd FileType c,cpp,mm setlocal cinoptions=h4,l1,g4,t0,i4,+4,(0,w1,W4
 " python indent
 autocmd FileType python set makeprg=python\ -c\ \"import\ py_compile,sys;\ sys.stderr=sys.stdout;\ py_compile.compile(r'%')\"
 autocmd FileType python set efm=%C\ %.%#,%A\ \ File\ \"%f\"\\,\ line\ %l%.%#,%Z%[%^\ ]%\\@=%m
-autocmd FileType python nmap <F5> :!python %<CR>
+autocmd FileType python nmap <F5> :exe "AsyncRun python " . input("Script:") . ""<CR>
+
+let g_my_python_debug = ''
+function! DebugPython()
+    let g:g_my_python_debug = input('debug run:', g:g_my_python_debug, 'history')
+    let debugMarker = 'from ipdb import set_trace; set_trace()'
+    let curline = substitute(getline('.'), '^\s*\t*', '', '')
+    if curline !~ debugMarker
+        let headgap = substitute(getline('.'), '\w.*$', '', '')
+        let debugMarker = headgap . debugMarker
+        call append(line('.'), debugMarker)
+        exe "w!"
+    endif
+    sp
+    " exe 'terminal python3 ' . g:g_my_python_debug
+endfunction
+autocmd! FileType python nmap <F9> :call DebugPython()<CR>
+
 autocmd FileType python set tabstop=4
 autocmd FileType python set go+=b
+autocmd FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
+nmap <silent> <leader>i <Plug>(pydocstring)
+
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " comment line."
 function! CommentLine(commentPrefix)
-  " let commentPrefix = '//'
   let commentPattern = '^\s*\t*' . a:commentPrefix
   let line = getline('.')
   if strlen(substitute(line, "[\s\t]", "", "")) < 1
@@ -136,12 +159,12 @@ function! CommentLine(commentPrefix)
     let newline = newline . strpart(line, idx + strlen(a:commentPrefix), strlen(line) - strlen(a:commentPrefix))
     call setline('.', newline)
   else
-    let newline = a:commentPrefix . line
+    let newline = a:commentPrefix . " " . line
     call setline('.', newline)
   endif
 endfunction
-autocmd FileType c,cpp,cs map tm :call CommentLine('//')<CR>
-autocmd FileType py map tm :call CommentLine('#')<CR>
+autocmd FileType c,cpp,cs map tm :call CommentLine('// ')<CR>
+autocmd FileType python map tm :call CommentLine('# ')<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "Doxygen"{{{
 " nmap <leader>dc :Dox<CR>
@@ -327,7 +350,7 @@ set fileencodings=utf8,ucs-bom,gbk,cp936,gb18030
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " status line
 set laststatus=2
-"set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('%s','','')}\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
+set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('【%s】','','f')}%=\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
 
 """"""""""""""""""""""""""""""for NERDTree"{{{
 " >> auto change current directory to current openning file.
@@ -435,6 +458,7 @@ if executable('ag')
   let g:ctrlp_user_command = 'ag %s -l --nocolor --hidden -g ""'
 endif
 let g:ctrlp_max_files=0
+let g:ctrlp_max_depth=40 
 " let g:ctrlp_regexp = 1
 let g:ctrlp_by_filename = 1
 let g:ctrlp_use_caching = 1
@@ -442,7 +466,7 @@ let g:ctrlp_cache_dir = '~/.ctrp_cache/ctrlp'
 let g:ctrlp_extensions = ['tag', 'buffertag', 'bookmarkdir']
 let g:ctrlp_custom_ignore = {
 			\ 'dir':  '\v[\/]\.(git|hg|svn)$',
-			\ 'file': '\v\.(exe|so|dll|html|js|obj|meta|jpg|gif|png|jpeg|tiff|o|meta|prefab|asset|pyc)$',
+			\ 'file': '\v\.(exe|so|dll|html|js|obj|meta|jpg|gif|png|jpeg|tiff|o|meta|prefab|asset|pyc|venv)$',
 			\ 'link': 'SOME_BAD_SYMBOLIC_LINKS',
 			\ }
 " Use The Silver Searcher https://github.com/ggreer/the_silver_searcher
@@ -528,12 +552,12 @@ augroup omnisharp_commands
 	" Synchronous build (blocks Vim)
 	"autocmd FileType cs nnoremap <F5> :wa!<cr>:OmniSharpBuild<cr>
 	" Builds can also run asynchronously with vim-dispatch installed
-	autocmd FileType cs nnoremap <leader>b :wa!<cr>:OmniSharpBuildAsync<cr>
-	" automatic syntax check on events (TextChanged requires Vim 7.4)
-	" autocmd BufEnter,TextChanged,InsertLeave *.cs SyntasticCheck
+	autocmd FileType cs nnoremap <leader>b :wa!<cr>:OmniSharpBuildAsync<cr> 
+    " automatic syntax check on events (TextChanged requires Vim 7.4)
+	autocmd BufEnter,TextChanged,InsertLeave *.cs SyntasticCheck
 
 	" Automatically add new cs files to the nearest project on save
-	autocmd BufWritePost *.cs call OmniSharp#AddToProject()
+	" autocmd BufWritePost *.cs call OmniSharp#AddToProject()
 
 	"show type information automatically when the cursor stops moving
 	" autocmd CursorHold *.cs call OmniSharp#TypeLookupWithoutDocumentation()

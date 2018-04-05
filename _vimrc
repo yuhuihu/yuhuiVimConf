@@ -1,15 +1,20 @@
 set nocompatible 
 filetype off                  " required
 
-set rtp+=~\Vimfiles\bundle\Vundle.vim
-" let  path='~/vimfiles/bundle'
-call vundle#begin()
-"Plugin 'https://github.com/scrooloose/nerdtree.git'
-Plugin 'https://github.com/majutsushi/tagbar.git'
-Plugin 'https://github.com/doxygen/doxygen.git'
-"Plugin 'https://github.com/OmniSharp/omnisharp-vim.git'
-"Plugin 'https://github.com/kien/ctrlp.vim.git'
-call vundle#end()
+call plug#begin('~/.local/share/nvim/plugged')
+Plug 'https://github.com/scrooloose/nerdtree.git'
+Plug 'https://github.com/majutsushi/tagbar.git'
+Plug 'https://github.com/vim-scripts/TagHighlight.git'
+Plug 'https://github.com/vim-scripts/ScrollColors.git'
+Plug 'https://github.com/scrooloose/syntastic.git'
+Plug 'https://github.com/kien/ctrlp.vim.git'
+Plug 'https://github.com/OmniSharp/omnisharp-vim.git'
+Plug 'https://github.com/nathanaelkane/vim-indent-guides.git'
+Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+"""color scheme
+Plug 'https://github.com/hzchirs/vim-material.git'
+Plug 'https://github.com/beigebrucewayne/min_solo.git'
+Plug 'https://github.com/fhrach4/neo-jungle256.git'
 
 set diffexpr=MyDiff()"{{{
 function! MyDiff()
