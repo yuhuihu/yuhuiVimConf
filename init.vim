@@ -21,7 +21,7 @@ Plug 'airblade/vim-gitgutter'
 Plug 'https://github.com/Yggdroot/indentLine.git'
 Plug 'https://github.com/heavenshell/vim-pydocstring.git'
 Plug 'https://github.com/skywind3000/asyncrun.vim.git'
-"" Plug 'https://github.com/nvie/vim-flake8.git'
+Plug 'https://github.com/nvie/vim-flake8.git'
 """color scheme
 Plug 'https://github.com/hzchirs/vim-material.git'
 Plug 'https://github.com/beigebrucewayne/min_solo.git'
@@ -120,30 +120,28 @@ autocmd FileType c,cpp,mm setlocal cindent
 autocmd FileType c,cpp,mm setlocal cinoptions=h4,l1,g4,t0,i4,+4,(0,w1,W4
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " python indent
-autocmd FileType python set makeprg=python\ -c\ \"import\ py_compile,sys;\ sys.stderr=sys.stdout;\ py_compile.compile(r'%')\"
-autocmd FileType python set efm=%C\ %.%#,%A\ \ File\ \"%f\"\\,\ line\ %l%.%#,%Z%[%^\ ]%\\@=%m
-autocmd FileType python nmap <F5> :exe "AsyncRun python " . input("Script:") . ""<CR>
-
 let g_my_python_debug = ''
 function! DebugPython()
     let g:g_my_python_debug = input('debug run:', g:g_my_python_debug, 'history')
-    let debugMarker = 'from ipdb import set_trace; set_trace()'
-    let curline = substitute(getline('.'), '^\s*\t*', '', '')
-    if curline !~ debugMarker
-        let headgap = substitute(getline('.'), '\w.*$', '', '')
-        let debugMarker = headgap . debugMarker
-        call append(line('.'), debugMarker)
-        exe "w!"
-    endif
     sp
-     exe 'terminal python3 ' . g:g_my_python_debug
+    let cmd = "terminal ipdb3 -c 'b " . expand('%') . ":" . line('.') . "' -c continue " . g:g_my_python_debug
+    exe cmd
 endfunction
-autocmd! FileType python nmap <F9> :call DebugPython()<CR>
 
-autocmd FileType python set tabstop=4
-autocmd FileType python set go+=b
+let g_my_python_run = ''
+function! RunPython()
+    let g:g_my_python_run = input('run run:', g:g_my_python_run, 'history')
+    sp
+    exe 'terminal python3 ' . g:g_my_python_run
+endfunction
+
+autocmd FileType python set makeprg=python\ -c\ \"import\ py_compile,sys;\ sys.stderr=sys.stdout;\ py_compile.compile(r'%')\"
+autocmd FileType python set efm=%C\ %.%#,%A\ \ File\ \"%f\"\\,\ line\ %l%.%#,%Z%[%^\ ]%\\@=%m
+autocmd FileType python nmap <F5> :exe "AsyncRun python " . input("Script:") . ""<CR>
 autocmd FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
-nmap <silent> <leader>i <Plug>(pydocstring)
+autocmd FileType python nmap <silent> <leader>i <Plug>(pydocstring)
+autocmd FileType python nmap <F9> :call DebugPython()<CR>
+autocmd FileType python nmap <F10> :call RunPython()<CR>
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " comment line."
@@ -423,7 +421,7 @@ syntax sync minlines=256
 au BufNewFile,BufRead *.frag,*.vert,*.fp,*.vp,*.glsl setf glsl 
 """"""""""""""""""""""""""""""""""""""
 "hihight tags
-nmap <F10> :!ctags -R --c++-kinds=+p --fields=+iaS --extra=+q --totals=yes .<CR><CR>
+nmap <F11> :!ctags -R --c++-kinds=+p --fields=+iaS --extra=+q --totals=yes .<CR><CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "cscope"{{{
 if has("cscope")
