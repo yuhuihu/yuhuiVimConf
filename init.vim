@@ -20,13 +20,18 @@ Plug 'https://github.com/OrangeT/vim-csharp.git'
 Plug 'airblade/vim-gitgutter'
 Plug 'https://github.com/Yggdroot/indentLine.git'
 Plug 'https://github.com/heavenshell/vim-pydocstring.git'
-Plug 'https://github.com/skywind3000/asyncrun.vim.git'
-Plug 'https://github.com/nvie/vim-flake8.git'
+" Plug 'https://github.com/nvie/vim-flake8.git'
 """color scheme
 Plug 'https://github.com/hzchirs/vim-material.git'
 Plug 'https://github.com/beigebrucewayne/min_solo.git'
 Plug 'https://github.com/fhrach4/neo-jungle256.git'
+Plug 'https://github.com/vim-scripts/mayansmoke.git'
+Plug 'https://github.com/lmintmate/blue-mood-vim.git'
+Plug 'https://github.com/HenryNewcomer/vim-theme-mutenight-scene.git'
+Plug 'https://github.com/schickele/vim.git'
 
+" Plug 'iamcco/mathjax-support-for-mkdp'
+" Plug 'iamcco/markdown-preview.vim'
 call plug#end()
 
 let g:python2_host_prog = '/usr/local/bin/python2.7'
@@ -61,7 +66,7 @@ endfunction
 syntax on
 set autoread
 set cursorline		""hilight current line
-colo vim-material     
+colo vim-material
 set background=dark
 set guifont=Monaco\ Console:h12:w7
 set nu
@@ -94,7 +99,7 @@ function! SaveSession()
 	endif
 endfunction
 set sessionoptions=buffers,curdir,resize,folds,tabpages,slash,resize,winpos,winsize
-nmap <F3> :call SaveSession()<CR>
+nmap <F5> :call SaveSession()<CR>
 function! LoadSession(confirmed)
 	let aconf = a:confirmed
 	if aconf != 1
@@ -137,7 +142,6 @@ endfunction
 
 autocmd FileType python set makeprg=python\ -c\ \"import\ py_compile,sys;\ sys.stderr=sys.stdout;\ py_compile.compile(r'%')\"
 autocmd FileType python set efm=%C\ %.%#,%A\ \ File\ \"%f\"\\,\ line\ %l%.%#,%Z%[%^\ ]%\\@=%m
-autocmd FileType python nmap <F5> :exe "AsyncRun python " . input("Script:") . ""<CR>
 autocmd FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 autocmd FileType python nmap <silent> <leader>i <Plug>(pydocstring)
 autocmd FileType python nmap <F9> :call DebugPython()<CR>
@@ -157,7 +161,7 @@ function! CommentLine(commentPrefix)
     let newline = newline . strpart(line, idx + strlen(a:commentPrefix), strlen(line) - strlen(a:commentPrefix))
     call setline('.', newline)
   else
-    let newline = a:commentPrefix . " " . line
+    let newline = a:commentPrefix . line
     call setline('.', newline)
   endif
 endfunction
@@ -347,12 +351,20 @@ set fileencodings=utf8,ucs-bom,gbk,cp936,gb18030
 "set encoding=utf-8
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " status line
+"if  exists('g:gui_oni')
+"    " Turn off statusbar, because it is externalized
+"    set noshowmode
+"    set noruler
+"    set laststatus=0
+"    set noshowcmd
+"else
 set laststatus=2
 set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('【%s】','','f')}%=\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
+"endif
 
 """"""""""""""""""""""""""""""for NERDTree"{{{
 " >> auto change current directory to current openning file.
-nnoremap <silent> <F2> :let curPath =expand("%:h:p")<Bar> exe "NERDTree " . (len(curPath)<1 ?  "." : curPath)<CR>
+nnoremap <silent> <F7> :let curPath =expand("%:h:p")<Bar> exe "NERDTree " . (len(curPath)<1 ?  "." : curPath)<CR>
 "}}}
 
 """"""""""""""""""""""""""""""""""""""""""" ctags"{{{
@@ -607,3 +619,7 @@ set cmdheight=2
 nnoremap <leader>th :OmniSharpHighlightTypes<cr>
 "Don't ask to save when changing buffers (i.e. when jumping to a type definition)
 set hidden
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" markdown 
+let g:mkdp_auto_start = 1
