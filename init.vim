@@ -7,9 +7,7 @@ Plug 'https://github.com/scrooloose/nerdtree.git'
 Plug 'https://github.com/majutsushi/tagbar.git'
 Plug 'https://github.com/vimwiki/vimwiki.git'
 Plug 'https://github.com/vim-scripts/TagHighlight.git'
-Plug 'https://github.com/vim-scripts/DoxygenToolkit.vim.git'
 Plug 'https://github.com/vim-scripts/ScrollColors.git'
-Plug 'https://github.com/scrooloose/syntastic.git'
 Plug 'https://github.com/kien/ctrlp.vim.git'
 Plug 'https://github.com/OmniSharp/omnisharp-vim.git'
 Plug 'https://github.com/tpope/vim-fugitive.git'
@@ -17,11 +15,16 @@ Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'https://github.com/davidhalter/jedi-vim.git'
 Plug 'https://github.com/zchee/deoplete-jedi.git'
 Plug 'https://github.com/OrangeT/vim-csharp.git'
+Plug 'mhartington/nvim-typescript', { 'do': './install.sh' }
 Plug 'airblade/vim-gitgutter'
 Plug 'https://github.com/Yggdroot/indentLine.git'
 Plug 'https://github.com/heavenshell/vim-pydocstring.git'
-" Plug 'https://github.com/nvie/vim-flake8.git'
+Plug 'https://github.com/vim-syntastic/syntastic.git'
+
 """color scheme
+Plug 'https://github.com/nightsense/vrunchbang.git'
+Plug 'https://github.com/nightsense/snow.git'
+Plug 'https://github.com/lifepillar/vim-wwdc17-theme.git'
 Plug 'https://github.com/hzchirs/vim-material.git'
 Plug 'https://github.com/beigebrucewayne/min_solo.git'
 Plug 'https://github.com/fhrach4/neo-jungle256.git'
@@ -29,13 +32,14 @@ Plug 'https://github.com/vim-scripts/mayansmoke.git'
 Plug 'https://github.com/lmintmate/blue-mood-vim.git'
 Plug 'https://github.com/HenryNewcomer/vim-theme-mutenight-scene.git'
 Plug 'https://github.com/schickele/vim.git'
+Plug 'https://github.com/nightsense/seabird.git'
 
 " Plug 'iamcco/mathjax-support-for-mkdp'
 " Plug 'iamcco/markdown-preview.vim'
 call plug#end()
 
 let g:python2_host_prog = '/usr/local/bin/python2.7'
-let g:python3_host_prog = '/usr/local/bin/python3.6'
+let g:python3_host_prog = '/usr/local/bin/python3.7'
 
 set diffexpr=MyDiff()"{{{
 function! MyDiff()
@@ -66,7 +70,7 @@ endfunction
 syntax on
 set autoread
 set cursorline		""hilight current line
-colo vim-material
+colo torte
 set background=dark
 set guifont=Monaco\ Console:h12:w7
 set nu
@@ -127,15 +131,16 @@ autocmd FileType c,cpp,mm setlocal cinoptions=h4,l1,g4,t0,i4,+4,(0,w1,W4
 " python indent
 let g_my_python_debug = ''
 function! DebugPython()
-    let g:g_my_python_debug = input('debug run:', g:g_my_python_debug, 'history')
+    let g:g_my_python_debug = input('debug:', g:g_my_python_debug, 'file')
     sp
-    let cmd = "terminal ipdb3 -c 'b " . expand('%') . ":" . line('.') . "' -c continue " . g:g_my_python_debug
+    let cmd = "terminal python3 -m pdb -c 'b " . expand('%') . ":" . line('.') . "' -c continue " . g:g_my_python_debug
+    echo 'fuck cmd:' cmd
     exe cmd
 endfunction
 
 let g_my_python_run = ''
 function! RunPython()
-    let g:g_my_python_run = input('run run:', g:g_my_python_run, 'history')
+    let g:g_my_python_run = input('run:', g:g_my_python_run, 'file')
     sp
     exe 'terminal python3 ' . g:g_my_python_run
 endfunction
@@ -147,39 +152,42 @@ autocmd FileType python nmap <silent> <leader>i <Plug>(pydocstring)
 autocmd FileType python nmap <F9> :call DebugPython()<CR>
 autocmd FileType python nmap <F10> :call RunPython()<CR>
 
+function! Format_Python()
+    let filtePattern = [":%s/\\s*:\\s*/:/g", ":%s/(\\s*/(/g", ":%s/\\s*)/)/g", ":%s/[\\s*/[/g", ":%s/\\s*]/]/g", ":%s/{\\s*/{/g", ":%s/\\s*}/}/g", ":%s/\\s*$//g"]
+    call add(filtePattern, ":%s/\t/    /g")
+    for  fp in filtePattern
+        try
+            exec fp
+        catch E486
+        endtry
+    endfor
+endfunction
+
+autocmd FileType python nmap <leader>fm :call Format_Python()<CR>
+
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " comment line."
 function! CommentLine(commentPrefix)
-  let commentPattern = '^\s*\t*' . a:commentPrefix
-  let line = getline('.')
-  if strlen(substitute(line, "[\s\t]", "", "")) < 1
-    return
-  endif
-  if line =~ commentPattern
-    let idx = stridx(line, a:commentPrefix[0], 0)
-    let newline = strpart(line, 0, idx) 
-    let newline = newline . strpart(line, idx + strlen(a:commentPrefix), strlen(line) - strlen(a:commentPrefix))
-    call setline('.', newline)
-  else
-    let newline = a:commentPrefix . line
-    call setline('.', newline)
-  endif
+    let commentPattern = '^\s*\t*' . a:commentPrefix
+    let line = getline('.')
+    if strlen(substitute(line, '[\s\t]', '', '')) < 1
+        return
+    endif
+    if line =~ commentPattern
+        let idx = stridx(line, a:commentPrefix, 0)
+        let newline = strpart(line, 0, idx) 
+        let newline = newline . strpart(line, idx + strlen(a:commentPrefix), strlen(line) - strlen(a:commentPrefix) - idx)
+        call setline('.', newline)
+    else
+        let noindentLine = substitute(line, '^\s*\t*', '', '')
+        let idx = stridx(line, noindentLine)
+        let newline = strpart(line, 0, idx) . a:commentPrefix . noindentLine
+        call setline('.', newline)
+    endif
 endfunction
-autocmd FileType c,cpp,cs map tm :call CommentLine('// ')<CR>
+"autocmd FileType c,cpp,cs map tm :call CommentLine('// ')<CR>
 autocmd FileType python map tm :call CommentLine('# ')<CR>
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"Doxygen"{{{
-" nmap <leader>dc :Dox<CR>
-let g:DoxygenToolkit_compactOneLineDoc = "yes"
-let g:DoxygenToolkit_commentType = "C++"
-let g:DoxygenToolkit_briefTag_pre="\\brief " 
-let g:DoxygenToolkit_paramTag_pre="\\param " 
-let g:DoxygenToolkit_returnTag="\\returns " 
-"let g:DoxygenToolkit_blockHeader="--------------------------------------------"
-let g:DoxygenToolkit_blockFooter="" 
-let g:DoxygenToolkit_authorName="yuhuibear@gmail.com" 
-"let g:DoxygenToolkit_licenseTag="private license"   
-""}}}
+" autocmd FileType vim map tm :call CommentLine('" ')<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " replace current word.
 vmap tr "xy:exe "%s/" . @x . "/" . input("replace all [" . @x . "] by: ") . "/cg"<CR>
@@ -188,7 +196,7 @@ map  tu  zz:e!<CR>
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " find word in directories."{{{
-let g_my_search_path = '**/*'
+let g_my_search_path = '.'
 let g_my_search_replace_all = 0
 let g_my_search_keyword = ''
 function! SearchWordGlobal(vw, matchWord)
@@ -198,10 +206,21 @@ function! SearchWordGlobal(vw, matchWord)
 		let cw = "/\\<" . a:vw . "\\>/g"
 	endif
 	if strlen( g:g_my_search_path) < 1
-		let g:g_my_search_path = expand("%:h") . '**/*'
+		let g:g_my_search_path = expand("%:h") . './'
 	endif
 	let g:g_my_search_path = input("search [" . cw . "] in dir(regx): ",  g:g_my_search_path, "dir")
-	exe "noautocmd vimgrep " . cw . " " . g:g_my_search_path . ""
+    if g:g_my_search_path == '%'
+        exe "noautocmd vimgrep " . cw . "%"
+    else
+        let fext = expand("%:e")
+        if strlen(fext) > 0
+            let fext = '.' . fext
+        endif
+        if g:g_my_search_path[strlen(g:g_my_search_path) - 1] != '/'
+            let g:g_my_search_path = g:g_my_search_path . '/'
+        endif
+        exe "noautocmd vimgrep " . cw . " " . g:g_my_search_path . "**/*" . fext
+    endif
 	exe ":cw"
 	let qflst = getqflist()
 	let g:g_my_search_replace_all = len(qflst) > 0
@@ -266,15 +285,8 @@ map <silent> tcn :cn<CR>
 map <silent> tcp :cp<CR>
 map <silent> tco :copen<CR>
 map <silent> tcl :cclose<CR>
-" buffers switch, switching
-map <silent> tbn :bn<CR>
-map <silent> tbp :bp<CR>
-map <silent> tbd :bd<CR>
-map <silent> tbs :buffers<CR>:exe "buf " . input("switch to :") . ""<CR>
-map <silent> tvb :vs<CR>:winc w<CR>:buffers<CR>:exe "buf " . input("switch to :") . ""<CR>
-map <silent> tsb :sp<CR>:winc w<CR>:buffers<CR>:exe "buf " . input("switch to :") . ""<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" for folding 
+" for folding  {{{
 set foldcolumn=2
 "set foldmethod=indent
 set foldmethod=marker
@@ -299,18 +311,19 @@ endfunction
 autocmd FileType c,cpp,h,cs nmap <silent> tzf :call CreateFoldByRegion('{')<CR>
 nmap <silent> tza^ :call setline(v:lnum, getline(v:lnum) . "\t\t//{{{")<CR>
 nmap <silent> tza$ :call setline(v:lnum, getline(v:lnum) . "\t\t//}}}")<CR>
+""" }}}
 
 " add file discription."{{{
-function! AddDescription()
-
+function! AddDescription(commentChar)
+    echo ' in file description'
 	let lineCnt = len(getbufline(bufname("%"), 0, "$"))
 	if lineCnt > 1
 		return 0
 	endif
-	let time ="* @" .  strftime("%c") 
-	let file = "*" . expand("%")
-	let author = "* created by yuhui."
-	let description = ['/******************', file, "*", "*", author, time, '*******************/']
+	let time = a:commentChar . " @" .  strftime("%c") 
+	let file =  a:commentChar . expand("%")
+	let author =  a:commentChar . created by yuhui."
+	let description = [a:commentChar, file, a:commentChar, a:commentChar, author, time, a:commentChar]
 	let exfn = tolower(strpart(file, strlen(file)-2, strlen(file)))
 	if  exfn == ".h"
 		let macro = toupper(expand("%"))
@@ -339,7 +352,8 @@ function! AddDescription()
 		return 1
 	endif
 endfunction
-autocmd FileType c,cpp,h,cs exe ":call AddDescription()"
+autocmd FileType c,cpp,h,cs exec : call AddDescription('//')
+" autocmd FileType python exec : call AddDescription('"')
 "}}}
 "for GUI
 set guioptions-=T
@@ -351,24 +365,26 @@ set fileencodings=utf8,ucs-bom,gbk,cp936,gb18030
 "set encoding=utf-8
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " status line
-"if  exists('g:gui_oni')
-"    " Turn off statusbar, because it is externalized
-"    set noshowmode
-"    set noruler
-"    set laststatus=0
-"    set noshowcmd
-"else
-set laststatus=2
-set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('【%s】','','f')}%=\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
-"endif
+if  exists('g:gui_oni')
+    " Turn off statusbar, because it is externalized
+    set noshowmode
+    set noruler
+    set laststatus=0
+    set noshowcmd
+else
+    set laststatus=2
+    set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('【%s】','','f')}%=\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
+    set statusline+=%{SyntasticStatuslineFlag()}
+endif
 
 """"""""""""""""""""""""""""""for NERDTree"{{{
 " >> auto change current directory to current openning file.
-nnoremap <silent> <F7> :let curPath =expand("%:h:p")<Bar> exe "NERDTree " . (len(curPath)<1 ?  "." : curPath)<CR>
+nnoremap <silent> <F7> :let curPath =expand("%:h:p")<Bar> exec "NERDTree " . (len(curPath)<1 ?  "." : curPath)<CR>
 "}}}
 
 """"""""""""""""""""""""""""""""""""""""""" ctags"{{{
 let g:tagbar_left = 1
+let g:tagbar_autopreview = 1
 nnoremap <silent> T :TagbarToggle<CR>
 "autocmd FileType c,cpp,h,hpp nnoremap ttf: ts expand("<cword>")<CR>
 autocmd FileType c,cpp,h,hpp nnoremap ttn: tn<CR>
@@ -433,7 +449,7 @@ syntax sync minlines=256
 au BufNewFile,BufRead *.frag,*.vert,*.fp,*.vp,*.glsl setf glsl 
 """"""""""""""""""""""""""""""""""""""
 "hihight tags
-nmap <F11> :!ctags -R --c++-kinds=+p --fields=+iaS --extra=+q --totals=yes .<CR><CR>
+"nmap <F11> :!ctags -R --c++-kinds=+p --fields=+iaS --extra=+q --totals=yes .<CR><CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "cscope"{{{
 if has("cscope")
@@ -457,30 +473,36 @@ endfunction
 vmap <silent> tcf "xy<CR>:call CscopeFind(@x)<CR>
 nmap <silent> tcf :call CscopeFind(input("search: ", expand("<cword>"), "tag"))<CR>
 "}}}
+"
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "" ctrl p
 if executable('ag')
-  " Use Ag over Grep
-  set grepprg=ag\ --nogroup\ --nocolor\ --ignore\ *.meta
+    " ag for vim grep
+    set grepprg=ag\ --nogroup\ --nocolor\ --ignore-case\ --column\ --vimgrep
+    set grepformat=%f:%l:%c:%m,%f:%l:%m
 
   " Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
   " let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
-  let g:ctrlp_user_command = 'ag %s -l --nocolor --hidden -g ""'
+    let ignoreAg = join(['"subs"'], ' ')
+    let agcmd = 'ag %s -l --nocolor --ignore-dir ' . ignoreAg . ' -g ""'
+    "     echo 'agcmd:' agcmd
+    let g:ctrlp_user_command = agcmd
 endif
 let g:ctrlp_max_files=0
 let g:ctrlp_max_depth=40 
-" let g:ctrlp_regexp = 1
 let g:ctrlp_by_filename = 1
 let g:ctrlp_use_caching = 1
 let g:ctrlp_cache_dir = '~/.ctrp_cache/ctrlp'
-let g:ctrlp_extensions = ['tag', 'buffertag', 'bookmarkdir']
+let g:ctrlp_extensions = ['buffertag' ]
+let g:ctrlp_buftag_ctags_bin = 'ctags'
 let g:ctrlp_custom_ignore = {
-			\ 'dir':  '\v[\/]\.(git|hg|svn)$',
+			\ 'dir':  '\v[\/]\.(git|hg|svn|subs)$',
 			\ 'file': '\v\.(exe|so|dll|html|js|obj|meta|jpg|gif|png|jpeg|tiff|o|meta|prefab|asset|pyc|venv)$',
 			\ 'link': 'SOME_BAD_SYMBOLIC_LINKS',
 			\ }
-" Use The Silver Searcher https://github.com/ggreer/the_silver_searcher
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Use The Silver Searcher https://github.com/ggreer/the_silver_searcher
 " color scroll
 nmap <silent> <leader>cs :SCROLL<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -502,10 +524,19 @@ function! OpenUnityLog()
 endfunction
 nmap <leader>lg :call OpenUnityLog()<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" deoplete jedi
-let g:deoplete#sources#jedi#enable_cache = 1
+" deoplete all
 let g:deoplete#enable_at_startup = 1
-let g:deoplete#auto_complete_start_length = 1
+call deoplete#custom#option({
+\ 'auto_complete_delay': 200,
+\ 'smart_case': v:true,
+\ })
+" deoplete jedi
+let g:deoplete#enable_at_startup = 1
+let g:deoplete#sources#jedi#enable_cache = 1
+let g:deoplete#sources#jedi#enable_cache = 1
+let g:deoplete#auto_complete_start_length = 2
+let g:jedi#show_call_signatures = 1
+let g:jedi#popup_on_dot = 0
 " deplete clang 
 let g:deoplete#sources#clang#libclang_path = "/usr/local/Cellar/llvm/4.0.1/lib/libclang.dylib"
 let g:deoplete#sources#clang#clang_header = "/usr/local/Cellar/llvm/4.0.1/lib/clang"
@@ -623,3 +654,40 @@ set hidden
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " markdown 
 let g:mkdp_auto_start = 1
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" higroup
+
+highlight mulHl1 ctermfg=red guifg=red
+highlight mulHl2 ctermfg=green guifg=green
+highlight mulHl3 ctermfg=blue guifg=blue
+highlight mulHl4 ctermfg=magenta ctermbg=black guifg=IndianRed
+highlight mulHl5 ctermfg=green ctermbg=black guifg=chartreuse
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"" syntax
+" set statusline+=%#warningmsg#
+" set statusline+=%{SyntasticStatuslineFlag()}
+" set statusline+=%*
+
+set signcolumn=yes
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+let g:syntastic_python_pylint_exe = 'python3 -m flake8'
+let g:syntastic_warning_symbol = '❗'
+let g:syntastic_style_warning_symbol = '❗'
+let g:syntastic_error_symbol = '➤'
+let g:syntastic_style_error_symbol = '➤'
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"" terminal
+function! OpenTerminalSplit()
+    20split
+    exe ":terminal"
+	setlocal nowrap
+endfunction
+nmap <leader>m :call OpenTerminalSplit()<CR>
+tnoremap <Esc> <C-\><C-n>
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"" semshi
+" let g:semshi#active = 1
