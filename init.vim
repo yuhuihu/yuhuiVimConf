@@ -20,6 +20,10 @@ Plug 'airblade/vim-gitgutter'
 Plug 'https://github.com/Yggdroot/indentLine.git'
 Plug 'https://github.com/heavenshell/vim-pydocstring.git'
 Plug 'https://github.com/vim-syntastic/syntastic.git'
+Plug 'https://github.com/ludovicchabant/vim-gutentags.git'
+Plug 'carlitux/deoplete-ternjs', { 'do': 'npm install -g tern' }
+Plug 'https://github.com/Glench/Vim-Jinja2-Syntax.git'
+Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }}
 
 """color scheme
 Plug 'https://github.com/nightsense/vrunchbang.git'
@@ -352,7 +356,7 @@ function! AddDescription(commentChar)
 		return 1
 	endif
 endfunction
-autocmd FileType c,cpp,h,cs exec : call AddDescription('//')
+" autocmd FileType c,cpp,h,cs exec :call AddDescription('//')<CR>
 " autocmd FileType python exec : call AddDescription('"')
 "}}}
 "for GUI
@@ -374,7 +378,7 @@ if  exists('g:gui_oni')
 else
     set laststatus=2
     set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('【%s】','','f')}%=\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
-    set statusline+=%{SyntasticStatuslineFlag()}
+    " set statusline+=%{SyntasticStatuslineFlag()}
 endif
 
 """"""""""""""""""""""""""""""for NERDTree"{{{
@@ -533,13 +537,70 @@ call deoplete#custom#option({
 " deoplete jedi
 let g:deoplete#enable_at_startup = 1
 let g:deoplete#sources#jedi#enable_cache = 1
-let g:deoplete#sources#jedi#enable_cache = 1
 let g:deoplete#auto_complete_start_length = 2
 let g:jedi#show_call_signatures = 1
 let g:jedi#popup_on_dot = 0
 " deplete clang 
 let g:deoplete#sources#clang#libclang_path = "/usr/local/Cellar/llvm/4.0.1/lib/libclang.dylib"
 let g:deoplete#sources#clang#clang_header = "/usr/local/Cellar/llvm/4.0.1/lib/clang"
+" javascript
+" Set bin if you have many instalations
+let g:deoplete#sources#ternjs#tern_bin = '/usr/local/bin/tern'
+let g:deoplete#sources#ternjs#timeout = 1
+
+" Whether to include the types of the completions in the result data. Default: 0
+let g:deoplete#sources#ternjs#types = 1
+
+" Whether to include the distance (in scopes for variables, in prototypes for 
+" properties) between the completions and the origin position in the result 
+" data. Default: 0
+let g:deoplete#sources#ternjs#depths = 1
+
+" Whether to include documentation strings (if found) in the result data.
+" Default: 0
+let g:deoplete#sources#ternjs#docs = 1
+
+" When on, only completions that match the current word at the given point will
+" be returned. Turn this off to get all results, so that you can filter on the 
+" client side. Default: 1
+let g:deoplete#sources#ternjs#filter = 0
+
+" Whether to use a case-insensitive compare between the current word and 
+" potential completions. Default 0
+let g:deoplete#sources#ternjs#case_insensitive = 1
+
+" When completing a property and no completions are found, Tern will use some 
+" heuristics to try and return some properties anyway. Set this to 0 to 
+" turn that off. Default: 1
+let g:deoplete#sources#ternjs#guess = 0
+
+" Determines whether the result set will be sorted. Default: 1
+let g:deoplete#sources#ternjs#sort = 0
+
+" When disabled, only the text before the given position is considered part of 
+" the word. When enabled (the default), the whole variable name that the cursor
+" is on will be included. Default: 1
+let g:deoplete#sources#ternjs#expand_word_forward = 0
+
+" Whether to ignore the properties of Object.prototype unless they have been 
+" spelled out by at least two characters. Default: 1
+let g:deoplete#sources#ternjs#omit_object_prototype = 0
+
+" Whether to include JavaScript keywords when completing something that is not 
+" a property. Default: 0
+let g:deoplete#sources#ternjs#include_keywords = 1
+
+" If completions should be returned when inside a literal. Default: 1
+let g:deoplete#sources#ternjs#in_literal = 0
+
+
+"Add extra filetypes
+let g:deoplete#sources#ternjs#filetypes = [
+                \ 'jsx',
+                \ 'javascript.jsx',
+                \ 'vue',
+                \ '...'
+                \ ]
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " omnisharp
@@ -671,13 +732,17 @@ highlight mulHl5 ctermfg=green ctermbg=black guifg=chartreuse
 " set statusline+=%*
 
 set signcolumn=yes
-let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_open = 0
 let g:syntastic_check_on_wq = 0
 let g:syntastic_python_pylint_exe = 'python3 -m flake8'
 let g:syntastic_warning_symbol = '❗'
 let g:syntastic_style_warning_symbol = '❗'
 let g:syntastic_error_symbol = '➤'
 let g:syntastic_style_error_symbol = '➤'
+let g:syntastic_mode_map = {
+            \ "mode": "active",
+            \ "passive_filetypes": ["html"]
+            \}
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "" terminal
@@ -691,3 +756,54 @@ tnoremap <Esc> <C-\><C-n>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "" semshi
 " let g:semshi#active = 1
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" mark down preview
+" " set to 1, the nvim will open the preview window once enter the markdown buffer
+" default: 0
+let g:mkdp_auto_start = 1
+
+" set to 1, the nvim will auto close current preview window when change
+" from markdown buffer to another buffer
+" default: 1
+let g:mkdp_auto_close = 1
+
+" set to 1, the vim will just refresh markdown when save the buffer or
+" leave from insert mode, default 0 is auto refresh markdown as you edit or
+" move the cursor
+" default: 0
+let g:mkdp_refresh_slow = 0
+
+" set to 1, the MarkdownPreview command can be use for all files,
+" by default it just can be use in markdown file
+" default: 0
+let g:mkdp_command_for_global = 0
+
+" set to 1, preview server available to others in your network
+" by default, the server only listens on localhost (127.0.0.1)
+" default: 0
+let g:mkdp_open_to_the_world = 0
+
+" switch browser to open preview page
+" default: ''
+let g:mkdp_browser = ''
+
+" options for markdown render
+" mkit: markdown-it options for render
+" katex: katex options for math
+" uml: markdown-it-plantuml options
+" maid: mermaid options
+let g:mkdp_preview_options = {
+    \ 'mkit': {},
+    \ 'katex': {},
+    \ 'uml': {},
+    \ 'maid': {}
+    \ }
+
+" use a custom markdown style must be absolute path
+let g:mkdp_markdown_css = ''
+
+" use a custom highlight style must absolute path
+let g:mkdp_highlight_css = ''
+
+" use a custom port to start server or random for empty
+let g:mkdp_port = ''
