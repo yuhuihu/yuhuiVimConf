@@ -8,11 +8,14 @@ Plug 'https://github.com/scrooloose/nerdtree.git'
 Plug 'https://github.com/majutsushi/tagbar.git'
 
 Plug 'https://github.com/vim-scripts/ScrollColors.git'
-Plug 'https://github.com/kien/ctrlp.vim.git'
+" Plug 'https://github.com/kien/ctrlp.vim.git'
 Plug 'https://github.com/yuhuihu/vim-glsl.git'
 Plug 'https://github.com/tpope/vim-fugitive.git'
 
 Plug 'https://github.com/vim-syntastic/syntastic.git'
+
+Plug '/usr/local/opt/fzf'
+Plug 'junegunn/fzf.vim'
 
 Plug 'autozimu/LanguageClient-neovim', {
     \ 'branch': 'next',
@@ -101,7 +104,7 @@ if executable('ag')
     set grepformat=%f:%l:%c:%m,%f:%l:%m
     set grepprg=ag\ --vimgrep
     " bind \ (backward slash) to grep shortcut
-    command! -nargs=+ -complete=file -bar Ag silent! grep! <args>|cwindow|redraw!
+    command! -nargs=+ -complete=file -bar CAg silent! grep! <args>|cwindow|redraw!
 endif
 
 
@@ -110,7 +113,7 @@ function! SaveSession()
 	let ch = confirm("save session ?", "&Yes\n&No", 1)
 	if ch == 1
 		exe ":wa"
-		exe "mksession!"
+		exe "mksession! .session.vim"
 	else
 		echo "save session cancle."
 	endif
@@ -123,7 +126,7 @@ function! LoadSession(confirmed)
 		let aconf = confirm("load last session ?", "&Yes\n&No", 1)
 	endif
 	if aconf == 1
-		exe ":so Session.vim"
+		exe ":so .session.vim"
 	else
 		echo "load seesion cancled."
 	endif
@@ -222,15 +225,15 @@ function! SearchWordGlobal(vw, matchWord)
     else
         let cw = "/\\<" . a:vw . "\\>/"
     endif
-    exe "Ag " . cw 
+    exe "CAg " . cw 
     copen
     let qflst = getqflist()
     let g:g_my_search_replace_all = len(qflst) > 0
     let g:g_my_search_keyword = a:vw
 endfunction
 
-nmap <silent> <leader>f :exe 'Ag ' . expand("<cword>")<CR>
-nmap <silent> <leader>w :exe 'Ag \<' . expand("<cword>") . '\>'<CR>
+nmap <silent> <leader>f :exe 'CAg ' . expand("<cword>")<CR>
+nmap <silent> <leader>w :exe 'CAg \<' . expand("<cword>") . '\>'<CR>
 
 " replace words in directories
 function! ReplaceWordGlobal( noConfirm, matchWord)
@@ -477,28 +480,29 @@ au BufNewFile,BufRead *.frag,*.vert,*.fp,*.vp,*.glsl setf glsl
 "" ctrlp
 " Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
 " let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
-if executable('ag')
-    let ignoreAg = join(['"subs"', '"objs"'], ' ')
-    let agcmd = 'ag %s -l --nocolor --ignore ' . ignoreAg . ' -g ""'
-    "     echo 'agcmd:' agcmd
-    " ag is fast enough that CtrlP doesn't need to cache
-    let g:ctrlp_use_caching = 0
-    let g:ctrlp_user_command = agcmd
-else
-    " let g:ctrlp_user_command = 'fd --type f --color=never "" %s'
-    let g:ctrlp_use_caching = 1
-    let g:ctrlp_cache_dir = '~/.ctrp_cache/ctrlp'
-    let g:ctrlp_extensions = ['buffertag' ]
-    let g:ctrlp_buftag_ctags_bin = 'ctags'
-    let g:ctrlp_custom_ignore = {
-                \ 'dir':  '\v[\/]\.(git|hg|svn|subs)$',
-                \ 'file': '\v\.(exe|so|dll|obj|meta|jpg|gif|png|jpeg|tiff|o|meta|prefab|asset|pyc)$',
-                \ 'link': 'SOME_BAD_SYMBOLIC_LINKS',
-                \ }
-endif
-let g:ctrlp_max_files=0
-let g:ctrlp_max_depth=40 
-let g:ctrlp_by_filename = 1
+" if executable('ag')
+"     let ignoreAg = join(['"subs"', '"objs"'], ' ')
+"     let agcmd = 'ag %s -l --nocolor --ignore ' . ignoreAg . ' -g ""'
+"     "     echo 'agcmd:' agcmd
+"     " ag is fast enough that CtrlP doesn't need to cache
+"     let g:ctrlp_use_caching = 0
+"     let g:ctrlp_user_command = agcmd
+" else
+"     " let g:ctrlp_user_command = 'fd --type f --color=never "" %s'
+"     let g:ctrlp_use_caching = 1
+"     let g:ctrlp_cache_dir = '~/.ctrp_cache/ctrlp'
+"     let g:ctrlp_extensions = ['buffertag' ]
+"     let g:ctrlp_buftag_ctags_bin = 'ctags'
+"     let g:ctrlp_custom_ignore = {
+"                 \ 'dir':  '\v[\/]\.(git|hg|svn|subs)$',
+"                 \ 'file': '\v\.(exe|so|dll|obj|meta|jpg|gif|png|jpeg|tiff|o|meta|prefab|asset|pyc)$',
+"                 \ 'link': 'SOME_BAD_SYMBOLIC_LINKS',
+"                 \ }
+" endif
+" let g:ctrlp_max_files=0
+" let g:ctrlp_max_depth=40 
+" let g:ctrlp_by_filename = 1
+" let g:ctrlp_working_path_mode = 'ra'
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " color scroll
 nmap <silent> <leader>cs :SCROLL<CR>
@@ -572,7 +576,7 @@ let g:OmniSharp_timeout = 5
 " Don't autoselect first omnicomplete option, show options even if there is only
 " one (so the preview documentation is accessible). Remove 'preview' if you
 " don't want to see any documentation whatsoever.
-set completeopt=longest,menuone,preview
+set completeopt=longest,menuone
 
 " Fetch full documentation during omnicomplete requests.
 " There is a performance penalty with this (especially on Mono).
@@ -585,7 +589,7 @@ set completeopt=longest,menuone,preview
 set previewheight=5
 
 " Tell ALE to use OmniSharp for linting C# files, and no other linters.
-let g:ale_linters = { 'cs': ['OmniSharp'] }
+"let g:ale_linters = { 'cs': ['OmniSharp'] }
 
 " Fetch semantic type/interface/identifier names on BufEnter and highlight them
 let g:OmniSharp_highlight_types = 1
@@ -644,7 +648,7 @@ nnoremap <Leader>ss :OmniSharpStartServer<CR>
 nnoremap <Leader>sp :OmniSharpStopServer<CR>
 
 let g:OmniSharp_open_quickfix = 1
-let g:OmniSharp_selector_ui = 'ctrlp'
+let g:OmniSharp_selector_ui = 'fzf'
 " Enable snippet completion
 " let g:OmniSharp_want
 
@@ -662,3 +666,10 @@ let g:syntastic_cs_checkers = ['mcs']
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " markdown preview 
 nnoremap <M-m> :MarkdownPreview<CR>
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" fzf
+nnoremap <C-p> :Files<CR>
+nnoremap <C-f> :Ag<CR>
+autocmd! FileType fzf
+autocmd  FileType fzf set laststatus=0 noshowmode noruler
+            \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler
