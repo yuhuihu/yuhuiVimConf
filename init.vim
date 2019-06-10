@@ -11,8 +11,11 @@ Plug 'https://github.com/vim-scripts/ScrollColors.git'
 " Plug 'https://github.com/kien/ctrlp.vim.git'
 Plug 'https://github.com/yuhuihu/vim-glsl.git'
 Plug 'https://github.com/tpope/vim-fugitive.git'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'https://github.com/Yggdroot/indentLine'
 
-Plug 'https://github.com/vim-syntastic/syntastic.git'
+Plug 'w0rp/ale'
 
 Plug '/usr/local/opt/fzf'
 Plug 'junegunn/fzf.vim'
@@ -81,8 +84,11 @@ endfunction
 syntax on
 set autoread
 set cursorline		""hilight current line
-colo wwdc17
-set background=light
+
+if (has("termguicolors"))
+  set termguicolors
+endif
+
 set nu
 filetype on
 filetype plugin indent on
@@ -94,7 +100,8 @@ set softtabstop=4
 set nowrap
 set expandtab
 
-autocmd! BufNewFile,BufRead *.vs,*.fs,*.shader set ft=glsl
+colo seagull
+set background=dark
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " ag
@@ -179,13 +186,15 @@ function! CommentLine()
                 \ 'cs': '//',
                 \ 'python': '#',
                 \ 'vim': '"',
+                \ 'shader': '//',
+                \ 'glsl': '//',
                 \}
     let ft = &filetype
     let commtchar = ''
     if has_key(commtdict, ft) 
         let commtchar = ' ' . commtdict[ft]
     else
-        echo ft . ' type is not supported yet!'
+        echo 'comment [' . ft . '] type is not supported yet!'
         return 
     endif
 
@@ -546,13 +555,16 @@ endfunction
 nmap <leader>m :call OpenTerminalSplit()<CR>
 
 
-
 " Use deoplete.
 let g:deoplete#enable_at_startup = 1
+call deoplete#custom#option('sources', {
+            \ 'cs': ['omnisharp'],
+            \ })
 
 " Required for operations modifying multiple buffers like rename.
 set hidden
 
+let g:LanguageClient_selectionUI="quickfix"
 let g:LanguageClient_serverCommands = {
             \ 'rust': ['~/.cargo/bin/rustup', 'run', 'stable', 'rls'],
             \ 'javascript': ['/usr/local/bin/javascript-typescript-stdio'],
@@ -560,15 +572,17 @@ let g:LanguageClient_serverCommands = {
             \ 'python': ['/usr/local/bin/pyls'],
             \ 'ruby': ['~/.rbenv/shims/solargraph', 'stdio'],
             \ }
-
-" nnoremap <F5> :call LanguageClient_contextMenu()<CR>
+nnoremap <leader>C :call LanguageClient_contextMenu()<CR>
 " Or map each action separately
 " nnoremap <silent> K :call LanguageClient#textDocument_hover()<CR>
-" nnoremap <silent> gd :call LanguageClient#textDocument_definition()<CR>
+nnoremap <silent> gd :call LanguageClient#textDocument_definition()<CR>
 " nnoremap <silent> <F2> :call LanguageClient#textDocument_rename()<CR>
-"
+
+""""""""""""""""""""
 " Set the type lookup function to use the preview window instead of echoing it
 "let g:OmniSharp_typeLookupInPreview = 1
+"
+let g:OmniSharp_server_stdio = 1
 
 " Timeout in seconds to wait for a response from the server
 let g:OmniSharp_timeout = 5
@@ -589,7 +603,7 @@ set completeopt=longest,menuone
 set previewheight=5
 
 " Tell ALE to use OmniSharp for linting C# files, and no other linters.
-"let g:ale_linters = { 'cs': ['OmniSharp'] }
+let g:ale_linters = { 'cs': ['OmniSharp'] }
 
 " Fetch semantic type/interface/identifier names on BufEnter and highlight them
 let g:OmniSharp_highlight_types = 1
@@ -599,7 +613,7 @@ augroup omnisharp_commands
 
     " When Syntastic is available but not ALE, automatic syntax check on events
     " (TextChanged requires Vim 7.4)
-    autocmd BufEnter,TextChanged,InsertLeave *.cs SyntasticCheck
+    " autocmd BufEnter,TextChanged,InsertLeave *.cs SyntasticCheck
 
     " Show type information automatically when the cursor stops moving
     autocmd CursorHold *.cs call OmniSharp#TypeLookupWithoutDocumentation()
@@ -647,21 +661,10 @@ nnoremap <Leader>cf :OmniSharpCodeFormat<CR>
 nnoremap <Leader>ss :OmniSharpStartServer<CR>
 nnoremap <Leader>sp :OmniSharpStopServer<CR>
 
-let g:OmniSharp_open_quickfix = 1
+let g:OmniSharp_open_quickfix = 0
 let g:OmniSharp_selector_ui = 'fzf'
 " Enable snippet completion
 " let g:OmniSharp_want
-
-set statusline+=%#warningmsg#
-set statusline+=%{SyntasticStatuslineFlag()}
-set statusline+=%*
-
-let g:syntastic_always_populate_loc_list = 1
-let g:syntastic_auto_loc_list = 1
-let g:syntastic_check_on_open = 1
-let g:syntastic_check_on_wq = 0
-highlight SyntasticErrorSign guifg=white guibg=red
-let g:syntastic_cs_checkers = ['mcs']
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " markdown preview 
@@ -673,3 +676,8 @@ nnoremap <C-f> :Ag<CR>
 autocmd! FileType fzf
 autocmd  FileType fzf set laststatus=0 noshowmode noruler
             \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" ale
+" Set this. Airline will handle the rest.
+let g:airline#extensions#ale#enabled = 1
