@@ -7,18 +7,25 @@ call plug#begin('~/.local/share/nvim/plugged')
 Plug 'https://github.com/scrooloose/nerdtree.git'
 Plug 'https://github.com/majutsushi/tagbar.git'
 
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+
 Plug 'https://github.com/vim-scripts/ScrollColors.git'
 " Plug 'https://github.com/kien/ctrlp.vim.git'
 Plug 'https://github.com/yuhuihu/vim-glsl.git'
 Plug 'https://github.com/tpope/vim-fugitive.git'
+
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'https://github.com/Yggdroot/indentLine'
+Plug 'git@github.com:rafi/awesome-vim-colorschemes.git'
 
 Plug 'w0rp/ale'
 
 Plug '/usr/local/opt/fzf'
 Plug 'junegunn/fzf.vim'
+
+Plug 'HerringtonDarkholme/yats.vim'
+Plug 'mhartington/nvim-typescript', {'do': './install.sh'}
 
 Plug 'autozimu/LanguageClient-neovim', {
     \ 'branch': 'next',
@@ -29,7 +36,6 @@ Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'OmniSharp/omnisharp-vim'
 " Plug 'deoplete-plugins/deoplete-jedi'
 
-" Plug 'mhartington/nvim-typescript', { 'do': './install.sh' }
 Plug 'https://github.com/heavenshell/vim-pydocstring.git'
 " Plug 'https://github.com/vim-syntastic/syntastic.git'
 " Plug 'https://github.com/ludovicchabant/vim-gutentags.git'
@@ -86,7 +92,8 @@ set autoread
 set cursorline		""hilight current line
 
 if (has("termguicolors"))
-  set termguicolors
+    let $NVIM_TUI_ENABLE_TRUE_COLOR=1
+    set termguicolors
 endif
 
 set nu
@@ -100,8 +107,8 @@ set softtabstop=4
 set nowrap
 set expandtab
 
-colo seagull
-set background=dark
+colo mayansmoke
+" set background=dark
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " ag
@@ -117,32 +124,32 @@ endif
 
 " session"{{{
 function! SaveSession()
-	let ch = confirm("save session ?", "&Yes\n&No", 1)
-	if ch == 1
-		exe ":wa"
-		exe "mksession! .session.vim"
-	else
-		echo "save session cancle."
-	endif
+    let ch = confirm("save session ?", "&Yes\n&No", 1)
+    if ch == 1
+        exe ":wa"
+        exe "mksession! .session.vim"
+    else
+        echo "save session cancle."
+    endif
 endfunction
 set sessionoptions=buffers,curdir,resize,folds,tabpages,slash,resize,winpos,winsize
 nmap <F3> :call SaveSession()<CR>
 function! LoadSession(confirmed)
-	let aconf = a:confirmed
-	if aconf != 1
-		let aconf = confirm("load last session ?", "&Yes\n&No", 1)
-	endif
-	if aconf == 1
-		exe ":so .session.vim"
-	else
-		echo "load seesion cancled."
-	endif
+    let aconf = a:confirmed
+    if aconf != 1
+        let aconf = confirm("load last session ?", "&Yes\n&No", 1)
+    endif
+    if aconf == 1
+        exe ":so .session.vim"
+    else
+        echo "load seesion cancled."
+    endif
 endfunction
 nmap <F4> :call LoadSession(0)<CR>
 "}}}
 let g_my_python_debug = ''
 function! DebugPython()
-    let g:g_my_python_debug = input('debug:', g:g_my_python_debug, 'file')
+    let g:g_my_python_debug = input('python3 debug:', g:g_my_python_debug, 'file')
     sp
     let cmd = "terminal python3 -m pdb -c 'b " . expand('%') . ":" . line('.') . "' -c continue " . g:g_my_python_debug
     echo 'fuck cmd:' cmd
@@ -151,7 +158,7 @@ endfunction
 
 let g_my_python_run = ''
 function! RunPython()
-    let g:g_my_python_run = input('run:', g:g_my_python_run, 'file')
+    let g:g_my_python_run = input('python3 run:', g:g_my_python_run, 'file')
     sp
     exe 'terminal python3 ' . g:g_my_python_run
 endfunction
@@ -192,13 +199,13 @@ function! CommentLine()
     let ft = &filetype
     let commtchar = ''
     if has_key(commtdict, ft) 
-        let commtchar = ' ' . commtdict[ft]
+        let commtchar = commtdict[ft]
     else
         echo 'comment [' . ft . '] type is not supported yet!'
         return 
     endif
 
-    let commentPattern = '^\s*\t*' . commtchar
+    let commentPattern = '^\s*\t*' . commtchar . '\s*'
     let line = getline('.')
     if strlen(substitute(line, '[\s\t]', '', '')) < 1
         return
@@ -206,14 +213,15 @@ function! CommentLine()
     " comment added.
     if line =~ commentPattern
         let idx = stridx(line, commtchar, 0)
-        let newline = strpart(line, 0, idx) 
-        let newline = newline . strpart(line, idx + strlen(commtchar), strlen(line) - strlen(commtchar) - idx)
-        call setline('.', newline)
+        let lineIndent = strpart(line, 0, idx) 
+        let content = strpart(line, idx + strlen(commtchar), strlen(line) - strlen(commtchar) - idx)
+        let content = substitute(content, '^\s*\t*', '', '')
+        call setline('.', lineIndent . content)
         " uncomment.
     else
         let noindentLine = substitute(line, '^\s*\t*', '', '')
         let idx = stridx(line, noindentLine)
-        let newline = strpart(line, 0, idx) . commtchar . noindentLine
+        let newline = strpart(line, 0, idx) . commtchar . ' ' . noindentLine
         call setline('.', newline)
     endif
 endfunction
@@ -243,6 +251,7 @@ endfunction
 
 nmap <silent> <leader>f :exe 'CAg ' . expand("<cword>")<CR>
 nmap <silent> <leader>w :exe 'CAg \<' . expand("<cword>") . '\>'<CR>
+vmap <silent> <leader>f :y"x <Bar> exe 'CAg ' . @x<CR>
 
 " replace words in directories
 function! ReplaceWordGlobal( noConfirm, matchWord)
@@ -348,14 +357,14 @@ function! AddDescription()
     let ft = &filetype
     let commtchar = ''
     if has_key(commtdict, ft) 
-        let commtchar = ' ' . commtdict[ft]
+        let commtchar = '' . commtdict[ft]
     else
         echo ft . ' type is not supported yet!'
         return 
     endif
 
     let time = commtchar . " @" .  strftime("%c") 
-    let file =  commtchar . expand("%")
+    let file =  commtchar . ' ' . expand("%")
     let author =  commtchar . " created by yuhui."
     let description = [file, commtchar, commtchar, author, time, '']
     let exfn = expand('%:e')
@@ -380,6 +389,9 @@ function! AddDescription()
             call add(description, theader)
             call add(description, '')
         endif
+    elseif exfn == 'py' 
+        call insert(description, "#!/usr/bin/env python", 0)
+        call insert(description, "# -*- coding: utf-8 -*-", 1)
     else
 
     endif
@@ -406,11 +418,12 @@ if  exists('g:gui_oni')
     " set laststatus=0
     " set noshowcmd
     set laststatus=2
-    set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('【%s】','','f')}%=\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
+    set statusline=%<%f\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('【%s】','','f')}%=\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
 else
     set laststatus=2
-    set statusline=%<%F\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('【%s】','','f')}%=\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
+    " set statusline=%<%f\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('【%s】','','f')}%=\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
     " set statusline+=%{SyntasticStatuslineFlag()}
+    let g:airline_section_z = '%l/%L'
 endif
 
 """"""""""""""""""""""""""""""for NERDTree"{{{
@@ -420,7 +433,7 @@ nnoremap <silent> <F7> :let curPath =expand("%:h:p")<Bar> exec "NERDTree " . (le
 
 """"""""""""""""""""""""""""""""""""""""""" ctags"{{{
 let g:tagbar_left = 1
-let g:tagbar_autopreview = 1
+let g:tagbar_autopreview = 0
 nnoremap <silent> T :TagbarToggle<CR>
 "autocmd FileType c,cpp,h,hpp nnoremap ttf: ts expand("<cword>")<CR>
 autocmd FileType c,cpp,h,hpp nnoremap ttn: tn<CR>
@@ -485,33 +498,6 @@ syntax sync minlines=256
 au BufNewFile,BufRead *.frag,*.vert,*.fp,*.vp,*.glsl setf glsl 
 
 
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"" ctrlp
-" Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
-" let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
-" if executable('ag')
-"     let ignoreAg = join(['"subs"', '"objs"'], ' ')
-"     let agcmd = 'ag %s -l --nocolor --ignore ' . ignoreAg . ' -g ""'
-"     "     echo 'agcmd:' agcmd
-"     " ag is fast enough that CtrlP doesn't need to cache
-"     let g:ctrlp_use_caching = 0
-"     let g:ctrlp_user_command = agcmd
-" else
-"     " let g:ctrlp_user_command = 'fd --type f --color=never "" %s'
-"     let g:ctrlp_use_caching = 1
-"     let g:ctrlp_cache_dir = '~/.ctrp_cache/ctrlp'
-"     let g:ctrlp_extensions = ['buffertag' ]
-"     let g:ctrlp_buftag_ctags_bin = 'ctags'
-"     let g:ctrlp_custom_ignore = {
-"                 \ 'dir':  '\v[\/]\.(git|hg|svn|subs)$',
-"                 \ 'file': '\v\.(exe|so|dll|obj|meta|jpg|gif|png|jpeg|tiff|o|meta|prefab|asset|pyc)$',
-"                 \ 'link': 'SOME_BAD_SYMBOLIC_LINKS',
-"                 \ }
-" endif
-" let g:ctrlp_max_files=0
-" let g:ctrlp_max_depth=40 
-" let g:ctrlp_by_filename = 1
-" let g:ctrlp_working_path_mode = 'ra'
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " color scroll
 nmap <silent> <leader>cs :SCROLL<CR>
@@ -571,6 +557,7 @@ let g:LanguageClient_serverCommands = {
             \ 'javascript.jsx': ['tcp://127.0.0.1:2089'],
             \ 'python': ['/usr/local/bin/pyls'],
             \ 'ruby': ['~/.rbenv/shims/solargraph', 'stdio'],
+            \ 'java': ['/Users/huyuhui/work/java/java-language-server/dist/launch_mac.sh --quiet'],
             \ }
 nnoremap <leader>C :call LanguageClient_contextMenu()<CR>
 " Or map each action separately
@@ -603,7 +590,7 @@ set completeopt=longest,menuone
 set previewheight=5
 
 " Tell ALE to use OmniSharp for linting C# files, and no other linters.
-let g:ale_linters = { 'cs': ['OmniSharp'] }
+" let g:ale_linters = { 'cs': ['OmniSharp'] }
 
 " Fetch semantic type/interface/identifier names on BufEnter and highlight them
 let g:OmniSharp_highlight_types = 1
@@ -668,11 +655,13 @@ let g:OmniSharp_selector_ui = 'fzf'
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " markdown preview 
-nnoremap <M-m> :MarkdownPreview<CR>
+nnoremap <F11> :MarkdownPreview<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " fzf
 nnoremap <C-p> :Files<CR>
 nnoremap <C-f> :Ag<CR>
+nnoremap <leader>t :Tags<CR>
+
 autocmd! FileType fzf
 autocmd  FileType fzf set laststatus=0 noshowmode noruler
             \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler
@@ -681,3 +670,5 @@ autocmd  FileType fzf set laststatus=0 noshowmode noruler
 " ale
 " Set this. Airline will handle the rest.
 let g:airline#extensions#ale#enabled = 1
+let g:ale_sign_error = 'E>'
+let g:ale_sign_warning = 'W-'
