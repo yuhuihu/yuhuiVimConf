@@ -1,4 +1,4 @@
-set nocompatible 
+set nocompatible
 " Specify a directory for plugins
 " - For Neovim: ~/.local/share/nvim/plugged
 " - Avoid using standard Vim directory names like 'plugin'
@@ -10,7 +10,6 @@ Plug 'https://github.com/majutsushi/tagbar.git'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
 Plug 'https://github.com/vim-scripts/ScrollColors.git'
-" Plug 'https://github.com/kien/ctrlp.vim.git'
 Plug 'https://github.com/yuhuihu/vim-glsl.git'
 Plug 'https://github.com/tpope/vim-fugitive.git'
 
@@ -19,7 +18,6 @@ Plug 'vim-airline/vim-airline-themes'
 Plug 'https://github.com/Yggdroot/indentLine'
 Plug 'git@github.com:rafi/awesome-vim-colorschemes.git'
 
-Plug 'w0rp/ale'
 
 Plug '/usr/local/opt/fzf'
 Plug 'junegunn/fzf.vim'
@@ -27,21 +25,7 @@ Plug 'junegunn/fzf.vim'
 Plug 'HerringtonDarkholme/yats.vim'
 Plug 'mhartington/nvim-typescript', {'do': './install.sh'}
 
-Plug 'autozimu/LanguageClient-neovim', {
-    \ 'branch': 'next',
-    \ 'do': 'bash install.sh',
-    \ }
-
-Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-Plug 'OmniSharp/omnisharp-vim'
-" Plug 'deoplete-plugins/deoplete-jedi'
-
 Plug 'https://github.com/heavenshell/vim-pydocstring.git'
-" Plug 'https://github.com/vim-syntastic/syntastic.git'
-" Plug 'https://github.com/ludovicchabant/vim-gutentags.git'
-" Plug 'carlitux/deoplete-ternjs', { 'do': 'npm install -g tern' }
-" Plug 'https://github.com/Glench/Vim-Jinja2-Syntax.git'
-" Plug 'https://github.com/tomtom/tcomment_vim.git'
 
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }}
 
@@ -109,6 +93,12 @@ set expandtab
 
 colo mayansmoke
 " set background=dark
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"file encoding
+set fileencodings=utf8,ucs-bom,gbk,cp936,gb18030
+"set termencoding=utf-8,gbk,ucs-bom
+"set encoding=utf-8
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " ag
@@ -198,11 +188,11 @@ function! CommentLine()
                 \}
     let ft = &filetype
     let commtchar = ''
-    if has_key(commtdict, ft) 
+    if has_key(commtdict, ft)
         let commtchar = commtdict[ft]
     else
         echo 'comment [' . ft . '] type is not supported yet!'
-        return 
+        return
     endif
 
     let commentPattern = '^\s*\t*' . commtchar . '\s*'
@@ -213,7 +203,7 @@ function! CommentLine()
     " comment added.
     if line =~ commentPattern
         let idx = stridx(line, commtchar, 0)
-        let lineIndent = strpart(line, 0, idx) 
+        let lineIndent = strpart(line, 0, idx)
         let content = strpart(line, idx + strlen(commtchar), strlen(line) - strlen(commtchar) - idx)
         let content = substitute(content, '^\s*\t*', '', '')
         call setline('.', lineIndent . content)
@@ -238,11 +228,11 @@ let g_my_search_replace_all = 0
 let g_my_search_keyword = ''
 function! SearchWordGlobal(vw, matchWord)
     if a:matchWord == 0
-        let cw ="/" .  a:vw . "/" 
+        let cw ="/" .  a:vw . "/"
     else
         let cw = "/\\<" . a:vw . "\\>/"
     endif
-    exe "CAg " . cw 
+    exe "CAg " . cw
     copen
     let qflst = getqflist()
     let g:g_my_search_replace_all = len(qflst) > 0
@@ -257,7 +247,7 @@ vmap <silent> <leader>f :y"x <Bar> exe 'CAg ' . @x<CR>
 function! ReplaceWordGlobal( noConfirm, matchWord)
     let qflst = getqflist()
     let g:g_my_search_replace_all = len(qflst) > 0
-    if( g:g_my_search_replace_all == 0) 
+    if( g:g_my_search_replace_all == 0)
         return
     endif
 
@@ -270,7 +260,7 @@ function! ReplaceWordGlobal( noConfirm, matchWord)
     else
         let replaceCmd =  ":%s/\\<" . g:g_my_search_keyword . "\\>/" . newkw
     endif
-    if a:noConfirm == 0 
+    if a:noConfirm == 0
         let replaceCmd=  replaceCmd . "/g"
     else
         let replaceCmd=  replaceCmd . "/gc"
@@ -278,7 +268,7 @@ function! ReplaceWordGlobal( noConfirm, matchWord)
     call inputrestore()
     let bufnums = []
     for qf in getqflist()
-        if index(bufnums, qf.bufnr) > -1 
+        if index(bufnums, qf.bufnr) > -1
             continue
         endif
         call add( bufnums, qf.bufnr )
@@ -295,7 +285,7 @@ nmap <silent> <leader>rw :call ReplaceWordGlobal(1, 1)<CR>
 "}}}
 " find word in correspond file
 "function! SearchWordInCorrespondFile()
-"let cw ="/" . input("corresponding search: ", expand("<cword>")) . "/g" 
+"let cw ="/" . input("corresponding search: ", expand("<cword>")) . "/g"
 "let distPath = "" . expand("%<.cpp") . " " expand("%<.h") . " " . expand("%<.c")
 "exe "vimgrep " . cw . " " . distPath . ""
 "exe ":cw"
@@ -321,7 +311,7 @@ function! CreateFoldByRegion(regionSign)
     let startLineNum = line('.')
     while stridx(getline(startLineNum), a:regionSign) < 0
         let startLineNum = startLineNum + 1
-        if startLineNum == line('$') 
+        if startLineNum == line('$')
             echo "reach end of file, can not create folding!"
             return
         endif
@@ -356,14 +346,14 @@ function! AddDescription()
                 \}
     let ft = &filetype
     let commtchar = ''
-    if has_key(commtdict, ft) 
+    if has_key(commtdict, ft)
         let commtchar = '' . commtdict[ft]
     else
         echo ft . ' type is not supported yet!'
-        return 
+        return
     endif
 
-    let time = commtchar . " @" .  strftime("%c") 
+    let time = commtchar . " @" .  strftime("%c")
     let file =  commtchar . ' ' . expand("%")
     let author =  commtchar . " created by yuhui."
     let description = [file, commtchar, commtchar, author, time, '']
@@ -389,7 +379,7 @@ function! AddDescription()
             call add(description, theader)
             call add(description, '')
         endif
-    elseif exfn == 'py' 
+    elseif exfn == 'py'
         call insert(description, "#!/usr/bin/env python", 0)
         call insert(description, "# -*- coding: utf-8 -*-", 1)
     else
@@ -403,11 +393,6 @@ endfunction
 autocmd FileType c,cpp,h,cs,python exe "call AddDescription()"
 "}}}
 
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"file encoding
-set fileencodings=utf8,ucs-bom,gbk,cp936,gb18030
-"set termencoding=utf-8,gbk,ucs-bom
-"set encoding=utf-8
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " status line
 if  exists('g:gui_oni')
@@ -435,13 +420,7 @@ nnoremap <silent> <F7> :let curPath =expand("%:h:p")<Bar> exec "NERDTree " . (le
 let g:tagbar_left = 1
 let g:tagbar_autopreview = 0
 nnoremap <silent> T :TagbarToggle<CR>
-"autocmd FileType c,cpp,h,hpp nnoremap ttf: ts expand("<cword>")<CR>
-autocmd FileType c,cpp,h,hpp nnoremap ttn: tn<CR>
-autocmd FileType c,cpp,h,hpp nnoremap ttp: tp<CR>
-nnoremap <silent> tpj : exe "ptj " . expand("<cword>") . ""<CR>
-nnoremap <silent> tpn : ptn<CR>
-nnoremap <silent> tpp : ptp<CR>
-set tags=../tags,tags				
+set tags=../tags,tags
 "}}}
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "open current file's header or cpp. toc : t mode o open c corespond."{{{
@@ -463,7 +442,7 @@ endfunction
 function! OpenCorrespondFile()
     let fname=expand("%")
     let idot=strridx(fname, ".")
-    if idot >0 
+    if idot >0
         let exh =tolower(strpart(fname, idot+1, 1))
         let mname = strpart(fname, 0, idot)
         if exh == "c"
@@ -486,39 +465,22 @@ endfunction
 autocmd FileType c,cpp,inl nnoremap <silent> toc : call OpenCorrespondFile()<CR>
 "}}}
 """"""""""""""""""""""""""""""""""""""
-"diff 
-set diffopt+=iwhite 
+"diff
+set diffopt+=iwhite
 set diffexpr=""
-"map tdf :let tg=input("compare to", expand("%<"), 
+"map tdf :let tg=input("compare to", expand("%<"),
+
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " synatx
-"au FileType frag,vert,fp,vp,glsl,vsh,fsh setf glsl 
+"au FileType frag,vert,fp,vp,glsl,vsh,fsh setf glsl
 syntax enable
 syntax sync minlines=256
-au BufNewFile,BufRead *.frag,*.vert,*.fp,*.vp,*.glsl setf glsl 
+au BufNewFile,BufRead *.frag,*.vert,*.fp,*.vp,*.glsl setf glsl
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " color scroll
 nmap <silent> <leader>cs :SCROLL<CR>
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" vim wiki
-let g:vimwiki_list = [{'path': '~/Library/Mobile Documents/com~apple~CloudDocs/vimwiki/', 'auto_tags': 1}]
-nmap <leader><space> <Plug>VimwikiToggleListItem
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" unity log
-function! OpenUnityLog()
-    let logfileName = expand("~/Library/Logs/Unity/Editor.log")
-    exe "tabfind " . logfileName
-    exe ":g/^(Filename:/d"
-    exe ":g/^UnityEngine\\./d"
-    exe ":g/^UnityEditor\\./d"
-    exe ":g/^YLMobile\\./d"
-    exe ":g/^\\s$/d"
-    exe ":g/^Apollo./d"
-    exe ":g/^\[\\w\\+/d"
-endfunction
-nmap <leader>lg :call OpenUnityLog()<CR>
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -541,120 +503,8 @@ endfunction
 nmap <leader>m :call OpenTerminalSplit()<CR>
 
 
-" Use deoplete.
-let g:deoplete#enable_at_startup = 1
-call deoplete#custom#option('sources', {
-            \ 'cs': ['omnisharp'],
-            \ })
-
-" Required for operations modifying multiple buffers like rename.
-set hidden
-
-let g:LanguageClient_selectionUI="quickfix"
-let g:LanguageClient_serverCommands = {
-            \ 'rust': ['~/.cargo/bin/rustup', 'run', 'stable', 'rls'],
-            \ 'javascript': ['/usr/local/bin/javascript-typescript-stdio'],
-            \ 'javascript.jsx': ['tcp://127.0.0.1:2089'],
-            \ 'python': ['/usr/local/bin/pyls'],
-            \ 'ruby': ['~/.rbenv/shims/solargraph', 'stdio'],
-            \ 'java': ['/Users/huyuhui/work/java/java-language-server/dist/launch_mac.sh --quiet'],
-            \ }
-nnoremap <leader>C :call LanguageClient_contextMenu()<CR>
-" Or map each action separately
-" nnoremap <silent> K :call LanguageClient#textDocument_hover()<CR>
-nnoremap <silent> gd :call LanguageClient#textDocument_definition()<CR>
-" nnoremap <silent> <F2> :call LanguageClient#textDocument_rename()<CR>
-
-""""""""""""""""""""
-" Set the type lookup function to use the preview window instead of echoing it
-"let g:OmniSharp_typeLookupInPreview = 1
-"
-let g:OmniSharp_server_stdio = 1
-
-" Timeout in seconds to wait for a response from the server
-let g:OmniSharp_timeout = 5
-
-" Don't autoselect first omnicomplete option, show options even if there is only
-" one (so the preview documentation is accessible). Remove 'preview' if you
-" don't want to see any documentation whatsoever.
-set completeopt=longest,menuone
-
-" Fetch full documentation during omnicomplete requests.
-" There is a performance penalty with this (especially on Mono).
-" By default, only Type/Method signatures are fetched. Full documentation can
-" still be fetched when you need it with the :OmniSharpDocumentation command.
-"let g:omnicomplete_fetch_full_documentation = 1
-
-" Set desired preview window height for viewing documentation.
-" You might also want to look at the echodoc plugin.
-set previewheight=5
-
-" Tell ALE to use OmniSharp for linting C# files, and no other linters.
-" let g:ale_linters = { 'cs': ['OmniSharp'] }
-
-" Fetch semantic type/interface/identifier names on BufEnter and highlight them
-let g:OmniSharp_highlight_types = 1
-
-augroup omnisharp_commands
-    autocmd!
-
-    " When Syntastic is available but not ALE, automatic syntax check on events
-    " (TextChanged requires Vim 7.4)
-    " autocmd BufEnter,TextChanged,InsertLeave *.cs SyntasticCheck
-
-    " Show type information automatically when the cursor stops moving
-    autocmd CursorHold *.cs call OmniSharp#TypeLookupWithoutDocumentation()
-
-    " Update the highlighting whenever leaving insert mode
-    autocmd InsertLeave *.cs call OmniSharp#HighlightBuffer()
-
-    " Alternatively, use a mapping to refresh highlighting for the current buffer
-    autocmd FileType cs nnoremap <buffer> <Leader>th :OmniSharpHighlightTypes<CR>
-
-    " The following commands are contextual, based on the cursor position.
-    autocmd FileType cs nnoremap <buffer> gd :OmniSharpGotoDefinition<CR>
-    autocmd FileType cs nnoremap <buffer> <Leader>fi :OmniSharpFindImplementations<CR>
-    autocmd FileType cs nnoremap <buffer> <Leader>fs :OmniSharpFindSymbol<CR>
-    autocmd FileType cs nnoremap <buffer> <Leader>fu :OmniSharpFindUsages<CR>
-
-    " Finds members in the current buffer
-    " autocmd FileType cs nnoremap <buffer> <Leader>fm :OmniSharpFindMembers<CR>
-
-    autocmd FileType cs nnoremap <buffer> <Leader>fx :OmniSharpFixUsings<CR>
-    autocmd FileType cs nnoremap <buffer> <Leader>tt :OmniSharpTypeLookup<CR>
-    autocmd FileType cs nnoremap <buffer> <Leader>dc :OmniSharpDocumentation<CR>
-    autocmd FileType cs nnoremap <buffer> <C-\> :OmniSharpSignatureHelp<CR>
-    autocmd FileType cs inoremap <buffer> <C-\> <C-o>:OmniSharpSignatureHelp<CR>
-
-    " Navigate up and down by method/property/field
-    autocmd FileType cs nnoremap <buffer> <C-k> :OmniSharpNavigateUp<CR>
-    autocmd FileType cs nnoremap <buffer> <C-j> :OmniSharpNavigateDown<CR>
-augroup END
-
-" Contextual code actions (uses fzf, CtrlP or unite.vim when available)
-nnoremap <Leader><Space> :OmniSharpGetCodeActions<CR>
-" Run code actions with text selected in visual mode to extract method
-xnoremap <Leader><Space> :call OmniSharp#GetCodeActions('visual')<CR>
-
-" Rename with dialog
-" nnoremap <Leader>nm :OmniSharpRename<CR>
-nnoremap <F2> :OmniSharpRename<CR>
-" Rename without dialog - with cursor on the symbol to rename: `:Rename newname`
-" command! -nargs=1 Rename :call OmniSharp#RenameTo("<args>")
-
-nnoremap <Leader>cf :OmniSharpCodeFormat<CR>
-
-" Start the omnisharp server for the current solution
-nnoremap <Leader>ss :OmniSharpStartServer<CR>
-nnoremap <Leader>sp :OmniSharpStopServer<CR>
-
-let g:OmniSharp_open_quickfix = 0
-let g:OmniSharp_selector_ui = 'fzf'
-" Enable snippet completion
-" let g:OmniSharp_want
-
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" markdown preview 
+" markdown preview
 nnoremap <F11> :MarkdownPreview<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " fzf
@@ -667,8 +517,132 @@ autocmd  FileType fzf set laststatus=0 noshowmode noruler
             \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" ale
-" Set this. Airline will handle the rest.
-let g:airline#extensions#ale#enabled = 1
-let g:ale_sign_error = 'E>'
-let g:ale_sign_warning = 'W-'
+" COC
+" if hidden is not set, TextEdit might fail.
+set hidden
+
+" Some servers have issues with backup files, see #649
+set nobackup
+set nowritebackup
+
+" Better display for messages
+set cmdheight=2
+
+" You will have bad experience for diagnostic messages when it's default 4000.
+set updatetime=300
+
+" don't give |ins-completion-menu| messages.
+set shortmess+=c
+
+" always show signcolumns
+set signcolumn=yes
+
+" Use tab for trigger completion with characters ahead and navigate.
+" Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
+inoremap <silent><expr> <TAB>
+      \ pumvisible() ? "\<C-n>" :
+      \ <SID>check_back_space() ? "\<TAB>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+function! s:check_back_space() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+" Use <c-space> to trigger completion.
+inoremap <silent><expr> <c-space> coc#refresh()
+
+" Use <cr> to confirm completion, `<C-g>u` means break undo chain at current position.
+" Coc only does snippet and additional edit on confirm.
+inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
+" Or use `complete_info` if your vim support it, like:
+" inoremap <expr> <cr> complete_info()["selected"] != "-1" ? "\<C-y>" : "\<C-g>u\<CR>"
+
+" Use `[g` and `]g` to navigate diagnostics
+nmap <silent> [g <Plug>(coc-diagnostic-prev)
+nmap <silent> ]g <Plug>(coc-diagnostic-next)
+
+" Remap keys for gotos
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+
+" Use K to show documentation in preview window
+nnoremap <silent> K :call <SID>show_documentation()<CR>
+
+function! s:show_documentation()
+  if (index(['vim','help'], &filetype) >= 0)
+    execute 'h '.expand('<cword>')
+  else
+    call CocAction('doHover')
+  endif
+endfunction
+
+" Highlight symbol under cursor on CursorHold
+autocmd CursorHold * silent call CocActionAsync('highlight')
+
+" Remap for rename current word
+nmap <leader>rn <Plug>(coc-rename)
+
+" Remap for format selected region
+xmap <leader>f  <Plug>(coc-format-selected)
+nmap <leader>f  <Plug>(coc-format-selected)
+
+augroup mygroup
+  autocmd!
+  " Setup formatexpr specified filetype(s).
+  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+  " Update signature help on jump placeholder
+  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+augroup end
+
+" Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
+xmap <leader>a  <Plug>(coc-codeaction-selected)
+nmap <leader>a  <Plug>(coc-codeaction-selected)
+
+" Remap for do codeAction of current line
+nmap <leader>ac  <Plug>(coc-codeaction)
+" Fix autofix problem of current line
+nmap <leader>qf  <Plug>(coc-fix-current)
+
+" Create mappings for function text object, requires document symbols feature of languageserver.
+xmap if <Plug>(coc-funcobj-i)
+xmap af <Plug>(coc-funcobj-a)
+omap if <Plug>(coc-funcobj-i)
+omap af <Plug>(coc-funcobj-a)
+
+" Use <C-d> for select selections ranges, needs server support, like: coc-tsserver, coc-python
+" nmap <silent> <C-d> <Plug>(coc-range-select)
+" xmap <silent> <C-d> <Plug>(coc-range-select)
+
+" Use `:Format` to format current buffer
+command! -nargs=0 Format :call CocAction('format')
+
+" Use `:Fold` to fold current buffer
+command! -nargs=? Fold :call     CocAction('fold', <f-args>)
+
+" use `:OR` for organize import of current buffer
+command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')
+
+" Add status line support, for integration with other plugin, checkout `:h coc-status`
+set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
+
+" Using CocList
+" Show all diagnostics
+nnoremap <silent> <space>a  :<C-u>CocList diagnostics<cr>
+" Manage extensions
+nnoremap <silent> <space>e  :<C-u>CocList extensions<cr>
+" Show commands
+nnoremap <silent> <space>c  :<C-u>CocList commands<cr>
+" Find symbol of current document
+nnoremap <silent> <space>o  :<C-u>CocList outline<cr>
+" Search workspace symbols
+nnoremap <silent> <space>s  :<C-u>CocList -I symbols<cr>
+" Do default action for next item.
+nnoremap <silent> <space>j  :<C-u>CocNext<CR>
+" Do default action for previous item.
+nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
+" Resume latest coc list
+nnoremap <silent> <space>p  :<C-u>CocListResume<CR>
