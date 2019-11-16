@@ -15,19 +15,30 @@ Plug 'https://github.com/tpope/vim-fugitive.git'
 
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-Plug 'https://github.com/Yggdroot/indentLine'
+" Plug 'https://github.com/Yggdroot/indentLine'
+Plug 'https://github.com/nathanaelkane/vim-indent-guides'
 Plug 'git@github.com:rafi/awesome-vim-colorschemes.git'
-
 
 Plug '/usr/local/opt/fzf'
 Plug 'junegunn/fzf.vim'
 
 Plug 'HerringtonDarkholme/yats.vim'
-Plug 'mhartington/nvim-typescript', {'do': './install.sh'}
+" Plug 'mhartington/nvim-typescript', {'do': './install.sh'}
 
 Plug 'https://github.com/heavenshell/vim-pydocstring.git'
 
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }}
+function! BuildComposer(info)
+  if a:info.status != 'unchanged' || a:info.force
+    if has('nvim')
+      !cargo build --release --locked
+    else
+      !cargo build --release --locked --no-default-features --features json-rpc
+    endif
+  endif
+endfunction
+
+Plug 'euclio/vim-markdown-composer', { 'do': function('BuildComposer') }
 
 """color scheme
 Plug 'https://github.com/nightsense/vrunchbang.git'
@@ -41,6 +52,8 @@ Plug 'https://github.com/lmintmate/blue-mood-vim.git'
 Plug 'https://github.com/HenryNewcomer/vim-theme-mutenight-scene.git'
 Plug 'https://github.com/schickele/vim.git'
 Plug 'https://github.com/nightsense/seabird.git'
+Plug 'desmap/slick'
+Plug 'ayu-theme/ayu-vim'
 
 call plug#end()
 
@@ -91,7 +104,12 @@ set softtabstop=4
 set nowrap
 set expandtab
 
-colo mayansmoke
+" let ayucolor="light"  " for light version of theme
+let ayucolor="mirage" " for mirage version of theme
+" let ayucolor="dark"   " for dark version of theme
+colo ayu
+" colo challenger_deep
+
 " set background=dark
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -107,7 +125,6 @@ if executable('ag')
     " set grepprg=ag\ --nogroup\ --nocolor\ --ignore-case\ --column\ --vimgrep
     set grepformat=%f:%l:%c:%m,%f:%l:%m
     set grepprg=ag\ --vimgrep
-    " bind \ (backward slash) to grep shortcut
     command! -nargs=+ -complete=file -bar CAg silent! grep! <args>|cwindow|redraw!
 endif
 
@@ -177,6 +194,7 @@ autocmd FileType python nmap <leader>fm :call Format_Python()<CR>
 " comment line."
 function! CommentLine()
     let commtdict = {
+                \ 'java': '//',
                 \ 'c': '//',
                 \ 'cpp': '//',
                 \ 'h': '//',
@@ -226,22 +244,21 @@ map  tu  zz:e!<CR>
 " find word in directories."{{{
 let g_my_search_replace_all = 0
 let g_my_search_keyword = ''
-function! SearchWordGlobal(vw, matchWord)
-    if a:matchWord == 0
-        let cw ="/" .  a:vw . "/"
-    else
-        let cw = "/\\<" . a:vw . "\\>/"
-    endif
-    exe "CAg " . cw
+function! SearchWordGlobal()
+    let keyword = @a
+    normal! gv"ay
+    exe "CAg " . keyword
+    " let wid = win_getid()
     copen
+    " win_gotoid(wid)
     let qflst = getqflist()
-    let g:g_my_search_replace_all = len(qflst) > 0
-    let g:g_my_search_keyword = a:vw
+    let g:g_my_search_replace_all = len(qflst)
+    echo 'search: [' . keyword . "] matches " . len(qflst)
+    let g:g_my_search_keyword = keyword
 endfunction
 
 nmap <silent> <leader>f :exe 'CAg ' . expand("<cword>")<CR>
-nmap <silent> <leader>w :exe 'CAg \<' . expand("<cword>") . '\>'<CR>
-vmap <silent> <leader>f :y"x <Bar> exe 'CAg ' . @x<CR>
+vmap <silent> <leader>f :call SearchWordGlobal()<CR>
 
 " replace words in directories
 function! ReplaceWordGlobal( noConfirm, matchWord)
@@ -380,7 +397,7 @@ function! AddDescription()
             call add(description, '')
         endif
     elseif exfn == 'py'
-        call insert(description, "#!/usr/bin/env python", 0)
+        call insert(description, "#!/usr/bin/env python3", 0)
         call insert(description, "# -*- coding: utf-8 -*-", 1)
     else
 
@@ -408,7 +425,8 @@ else
     set laststatus=2
     " set statusline=%<%f\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('【%s】','','f')}%=\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
     " set statusline+=%{SyntasticStatuslineFlag()}
-    let g:airline_section_z = '%l/%L'
+    let g:airline_section_z = '%l/%L|B%n' 
+    let g:airline#extensions#coc#enabled = 1
 endif
 
 """"""""""""""""""""""""""""""for NERDTree"{{{
@@ -486,21 +504,19 @@ nmap <silent> <leader>cs :SCROLL<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " higroup
 
-highlight mulHl1 ctermfg=red guifg=red
-highlight mulHl2 ctermfg=green guifg=green
-highlight mulHl3 ctermfg=blue guifg=blue
-highlight mulHl4 ctermfg=magenta ctermbg=black guifg=IndianRed
-highlight mulHl5 ctermfg=green ctermbg=black guifg=chartreuse
-
+highlight mhl1 ctermfg=red guifg=red ctermbg=gray
+highlight mhl2 ctermfg=green guifg=green ctermbg=gray
+highlight mhl3 ctermfg=blue guifg=blue ctermbg=gray
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "" terminal
-function! OpenTerminalSplit()
-    20split
+function! OpenTerminalSplit(cmd)
+    exe a:cmd
     exe ":terminal"
     setlocal nowrap
 endfunction
-nmap <leader>m :call OpenTerminalSplit()<CR>
+nmap <leader>m :call OpenTerminalSplit('20split')<CR>
+nmap <leader>vm :call OpenTerminalSplit('vs')<CR>
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -510,7 +526,6 @@ nnoremap <F11> :MarkdownPreview<CR>
 " fzf
 nnoremap <C-p> :Files<CR>
 nnoremap <C-f> :Ag<CR>
-nnoremap <leader>t :Tags<CR>
 
 autocmd! FileType fzf
 autocmd  FileType fzf set laststatus=0 noshowmode noruler
@@ -587,8 +602,8 @@ autocmd CursorHold * silent call CocActionAsync('highlight')
 nmap <leader>rn <Plug>(coc-rename)
 
 " Remap for format selected region
-xmap <leader>f  <Plug>(coc-format-selected)
-nmap <leader>f  <Plug>(coc-format-selected)
+" xmap <leader>f  <Plug>(coc-format-selected)
+" nmap <leader>f  <Plug>(coc-format-selected)
 
 augroup mygroup
   autocmd!
@@ -646,3 +661,6 @@ nnoremap <silent> <space>j  :<C-u>CocNext<CR>
 nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
 " Resume latest coc list
 nnoremap <silent> <space>p  :<C-u>CocListResume<CR>
+" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "
+" vim indent
+let g:indent_guides_enable_on_vim_startup = 1
