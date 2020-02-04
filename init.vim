@@ -105,9 +105,9 @@ set nowrap
 set expandtab
 
 " let ayucolor="light"  " for light version of theme
-let ayucolor="mirage" " for mirage version of theme
-" let ayucolor="dark"   " for dark version of theme
-colo ayu
+" let ayucolor="mirage" " for mirage version of theme
+let ayucolor="dark"   " for dark version of theme
+colo PaperColor
 " colo challenger_deep
 
 " set background=dark
@@ -124,7 +124,7 @@ if executable('ag')
     " ag for vim grep
     " set grepprg=ag\ --nogroup\ --nocolor\ --ignore-case\ --column\ --vimgrep
     set grepformat=%f:%l:%c:%m,%f:%l:%m
-    set grepprg=ag\ --vimgrep
+    set grepprg=ag\ --vimgrep\ -U\ --nocolor\ -i\ --column\ -F
     command! -nargs=+ -complete=file -bar CAg silent! grep! <args>|cwindow|redraw!
 endif
 
@@ -199,10 +199,13 @@ function! CommentLine()
                 \ 'cpp': '//',
                 \ 'h': '//',
                 \ 'cs': '//',
+                \ 'typescript': '//',
+                \ 'js': '//',
                 \ 'python': '#',
                 \ 'vim': '"',
                 \ 'shader': '//',
                 \ 'glsl': '//',
+                \ 'sh': '#',
                 \}
     let ft = &filetype
     let commtchar = ''
@@ -244,21 +247,28 @@ map  tu  zz:e!<CR>
 " find word in directories."{{{
 let g_my_search_replace_all = 0
 let g_my_search_keyword = ''
-function! SearchWordGlobal()
-    let keyword = @a
-    normal! gv"ay
-    exe "CAg " . keyword
+function! SearchWordGlobal(keyword)
+    let kw = a:keyword
+    if len(kw) < 1
+        normal! gv"xy
+        let kw = @x
+    endif
+    exe "CAg " . kw . ' ./'
+    echo "CAg " . kw . ' ./**/*.' . expand("%:e")
+    let g:g_my_search_keyword = kw
     " let wid = win_getid()
-    copen
     " win_gotoid(wid)
     let qflst = getqflist()
-    let g:g_my_search_replace_all = len(qflst)
-    echo 'search: [' . keyword . "] matches " . len(qflst)
-    let g:g_my_search_keyword = keyword
+    if len(qflst) > 0
+        copen
+        let g:g_my_search_replace_all = len(qflst)
+    endif
+    " echo 'search: [' . kw . "] matches " . len(qflst)
 endfunction
 
-nmap <silent> <leader>f :exe 'CAg ' . expand("<cword>")<CR>
-vmap <silent> <leader>f :call SearchWordGlobal()<CR>
+" nmap <silent> <leader>f :exe 'CAg ' . expand("<cword>")<CR>
+nmap <silent> <leader>f :call SearchWordGlobal(expand("<cword>"))<CR>
+vmap <silent> <leader>f :call SearchWordGlobal('')<CR>
 
 " replace words in directories
 function! ReplaceWordGlobal( noConfirm, matchWord)
@@ -533,6 +543,7 @@ autocmd  FileType fzf set laststatus=0 noshowmode noruler
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " COC
+let g:airline#extensions#coc#enabled = 1
 " if hidden is not set, TextEdit might fail.
 set hidden
 
