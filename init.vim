@@ -10,8 +10,12 @@ Plug 'https://github.com/majutsushi/tagbar.git'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
 Plug 'https://github.com/vim-scripts/ScrollColors.git'
-Plug 'https://github.com/yuhuihu/vim-glsl.git'
 Plug 'https://github.com/tpope/vim-fugitive.git'
+
+Plug 'sheerun/vim-polyglot'
+
+Plug 'OmniSharp/omnisharp-vim'
+Plug 'git@github.com:dense-analysis/ale.git'
 
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
@@ -24,6 +28,7 @@ Plug 'junegunn/fzf.vim'
 
 Plug 'HerringtonDarkholme/yats.vim'
 " Plug 'mhartington/nvim-typescript', {'do': './install.sh'}
+Plug 'mileszs/ack.vim'
 
 Plug 'https://github.com/heavenshell/vim-pydocstring.git'
 
@@ -96,6 +101,7 @@ endif
 set nu
 filetype on
 filetype plugin indent on
+filetype indent plugin on
 set hlsearch
 set foldmethod=marker
 set tabstop=4
@@ -107,7 +113,8 @@ set expandtab
 " let ayucolor="light"  " for light version of theme
 " let ayucolor="mirage" " for mirage version of theme
 let ayucolor="dark"   " for dark version of theme
-colo PaperColor
+" colo PaperColor
+colo flattened_light
 " colo challenger_deep
 
 " set background=dark
@@ -117,16 +124,6 @@ colo PaperColor
 set fileencodings=utf8,ucs-bom,gbk,cp936,gb18030
 "set termencoding=utf-8,gbk,ucs-bom
 "set encoding=utf-8
-
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" ag
-if executable('ag')
-    " ag for vim grep
-    " set grepprg=ag\ --nogroup\ --nocolor\ --ignore-case\ --column\ --vimgrep
-    set grepformat=%f:%l:%c:%m,%f:%l:%m
-    set grepprg=ag\ --vimgrep\ -U\ --nocolor\ -i\ --column\ -F
-    command! -nargs=+ -complete=file -bar CAg silent! grep! <args>|cwindow|redraw!
-endif
 
 
 " session"{{{
@@ -194,6 +191,7 @@ autocmd FileType python nmap <leader>fm :call Format_Python()<CR>
 " comment line."
 function! CommentLine()
     let commtdict = {
+                \ 'lua': '--',
                 \ 'java': '//',
                 \ 'c': '//',
                 \ 'cpp': '//',
@@ -201,6 +199,8 @@ function! CommentLine()
                 \ 'cs': '//',
                 \ 'typescript': '//',
                 \ 'js': '//',
+                \ 'javascript': '//',
+                \ 'omnijs': '//',
                 \ 'python': '#',
                 \ 'vim': '"',
                 \ 'shader': '//',
@@ -245,6 +245,7 @@ map  tu  zz:e!<CR>
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " find word in directories."{{{
+let g:ackprg = 'ag --nogroup --nocolor --column'
 let g_my_search_replace_all = 0
 let g_my_search_keyword = ''
 function! SearchWordGlobal(keyword)
@@ -253,8 +254,8 @@ function! SearchWordGlobal(keyword)
         normal! gv"xy
         let kw = @x
     endif
-    exe "CAg " . kw . ' ./'
-    echo "CAg " . kw . ' ./**/*.' . expand("%:e")
+    exe "Ack " . kw . ' ./'
+    " echo "CAg " . kw . ' ./**/*.' . expand("%:e")
     let g:g_my_search_keyword = kw
     " let wid = win_getid()
     " win_gotoid(wid)
@@ -266,7 +267,6 @@ function! SearchWordGlobal(keyword)
     " echo 'search: [' . kw . "] matches " . len(qflst)
 endfunction
 
-" nmap <silent> <leader>f :exe 'CAg ' . expand("<cword>")<CR>
 nmap <silent> <leader>f :call SearchWordGlobal(expand("<cword>"))<CR>
 vmap <silent> <leader>f :call SearchWordGlobal('')<CR>
 
@@ -534,8 +534,9 @@ nmap <leader>vm :call OpenTerminalSplit('vs')<CR>
 nnoremap <F11> :MarkdownPreview<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " fzf
-nnoremap <C-p> :Files<CR>
+nnoremap <C-p> :GFiles<CR>
 nnoremap <C-f> :Ag<CR>
+nnoremap <C-b> :Buffers<CR>
 
 autocmd! FileType fzf
 autocmd  FileType fzf set laststatus=0 noshowmode noruler
@@ -543,6 +544,7 @@ autocmd  FileType fzf set laststatus=0 noshowmode noruler
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " COC
+let g:coc_global_extensions=[ 'coc-omnisharp' ]
 let g:airline#extensions#coc#enabled = 1
 " if hidden is not set, TextEdit might fail.
 set hidden
@@ -675,3 +677,28 @@ nnoremap <silent> <space>p  :<C-u>CocListResume<CR>
 " "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "
 " vim indent
 let g:indent_guides_enable_on_vim_startup = 1
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" " omnisharp
+let g:OmniSharp_server_path= '/Users/huyuhui/Downloads/omnisharp-osx/run'
+let g:OmniSharp_server_display_loading = 1
+let g:OmniSharp_server_stdio = 1
+let g:OmniSharp_selector_ui = 'ctrlp'
+let g:OmniSharp_start_server = 1
+
+" Update semantic highlighting after all text changes
+let g:OmniSharp_highlight_types = 3
+" Update semantic highlighting on BufEnter and InsertLeave
+" let g:OmniSharp_highlight_types = 2
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" ALE
+
+let g:ale_linters = { 'cs': ['OmniSharp'] }
+
+" call ale#linter#Define('cs', {
+            " \   'name': 'omnisharp',
+            " \   'lsp': 'stdio',
+            " \   'executable': '/Users/huyuhui/Downloads/omnisharp-osx/run',
+            " \   'command': '%e run',
+            " \   'project_root': '.',
+            " \})
