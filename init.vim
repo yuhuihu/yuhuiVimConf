@@ -14,7 +14,7 @@ Plug 'https://github.com/tpope/vim-fugitive.git'
 
 Plug 'sheerun/vim-polyglot'
 
-Plug 'OmniSharp/omnisharp-vim'
+" Plug 'OmniSharp/omnisharp-vim'
 Plug 'git@github.com:dense-analysis/ale.git'
 
 Plug 'vim-airline/vim-airline'
@@ -23,7 +23,7 @@ Plug 'vim-airline/vim-airline-themes'
 Plug 'https://github.com/nathanaelkane/vim-indent-guides'
 Plug 'git@github.com:rafi/awesome-vim-colorschemes.git'
 
-Plug '/usr/local/opt/fzf'
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
 Plug 'HerringtonDarkholme/yats.vim'
@@ -44,6 +44,7 @@ function! BuildComposer(info)
 endfunction
 
 Plug 'euclio/vim-markdown-composer', { 'do': function('BuildComposer') }
+Plug 'git@github.com:chrisbra/csv.vim.git'
 
 """color scheme
 Plug 'https://github.com/nightsense/vrunchbang.git'
@@ -52,13 +53,14 @@ Plug 'https://github.com/lifepillar/vim-wwdc17-theme.git'
 Plug 'https://github.com/hzchirs/vim-material.git'
 Plug 'https://github.com/beigebrucewayne/min_solo.git'
 Plug 'https://github.com/fhrach4/neo-jungle256.git'
+Plug 'https://github.com/arzg/vim-colors-xcode.git'
 Plug 'https://github.com/vim-scripts/mayansmoke.git'
 Plug 'https://github.com/lmintmate/blue-mood-vim.git'
 Plug 'https://github.com/HenryNewcomer/vim-theme-mutenight-scene.git'
 Plug 'https://github.com/schickele/vim.git'
 Plug 'https://github.com/nightsense/seabird.git'
-Plug 'desmap/slick'
 Plug 'ayu-theme/ayu-vim'
+Plug 'mhartington/oceanic-next'
 
 call plug#end()
 
@@ -109,6 +111,11 @@ set shiftwidth=4
 set softtabstop=4
 set nowrap
 set expandtab
+
+
+let g:airline_theme='oceanicnext'
+let g:oceanic_next_terminal_bold = 1
+let g:oceanic_next_terminal_italic = 1
 
 " let ayucolor="light"  " for light version of theme
 " let ayucolor="mirage" " for mirage version of theme
@@ -189,7 +196,7 @@ autocmd FileType python nmap <leader>fm :call Format_Python()<CR>
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " comment line."
-function! CommentLine()
+function! CommentLine()"{{{
     let commtdict = {
                 \ 'lua': '--',
                 \ 'java': '//',
@@ -235,7 +242,7 @@ function! CommentLine()
         let newline = strpart(line, 0, idx) . commtchar . ' ' . noindentLine
         call setline('.', newline)
     endif
-endfunction
+endfunction"}}}
 noremap  tm :call CommentLine()<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " replace current word.
@@ -269,6 +276,27 @@ endfunction
 
 nmap <silent> <leader>f :call SearchWordGlobal(expand("<cword>"))<CR>
 vmap <silent> <leader>f :call SearchWordGlobal('')<CR>
+
+function! SearchWordInCurrentFile(kw)
+    let keyword = a:kw
+    if len(keyword) < 1
+        normal! gv"xy
+        let keyword = @x
+    endif
+    exe "vimgrep /" . keyword . '/ %'
+    " echo "CAg " . kw . ' ./**/*.' . expand("%:e")
+    " let g:g_my_search_keyword = kw
+    " let wid = win_getid()
+    " win_gotoid(wid)
+    " let qflst = getqflist()
+    " if len(qflst) > 0
+        " copen
+        " let g:g_my_search_replace_all = len(qflst)
+    " endif
+    " echo 'search: [' . kw . "] matches " . len(qflst)
+endfunction
+nmap <silent> tf :call SearchWordInCurrentFile(expand("<cword>"))<CR>
+vmap <silent> tf :call SearchWordInCurrentFile('')<CR>
 
 " replace words in directories
 function! ReplaceWordGlobal( noConfirm, matchWord)
@@ -437,6 +465,7 @@ else
     " set statusline+=%{SyntasticStatuslineFlag()}
     let g:airline_section_z = '%l/%L|B%n' 
     let g:airline#extensions#coc#enabled = 1
+  let g:airline#extensions#ale#enabled = 1
 endif
 
 """"""""""""""""""""""""""""""for NERDTree"{{{
@@ -534,7 +563,7 @@ nmap <leader>vm :call OpenTerminalSplit('vs')<CR>
 nnoremap <F11> :MarkdownPreview<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " fzf
-nnoremap <C-p> :GFiles<CR>
+nnoremap <C-p> :Files<CR>
 nnoremap <C-f> :Ag<CR>
 nnoremap <C-b> :Buffers<CR>
 
@@ -680,14 +709,14 @@ let g:indent_guides_enable_on_vim_startup = 1
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " " omnisharp
-let g:OmniSharp_server_path= '/Users/huyuhui/Downloads/omnisharp-osx/run'
-let g:OmniSharp_server_display_loading = 1
-let g:OmniSharp_server_stdio = 1
-let g:OmniSharp_selector_ui = 'ctrlp'
-let g:OmniSharp_start_server = 1
+" let g:OmniSharp_server_path= '/Users/huyuhui/Downloads/omnisharp-osx/run'
+" let g:OmniSharp_server_display_loading = 1
+" let g:OmniSharp_server_stdio = 1
+" let g:OmniSharp_selector_ui = 'ctrlp'
+" let g:OmniSharp_start_server = 1
 
 " Update semantic highlighting after all text changes
-let g:OmniSharp_highlight_types = 3
+" let g:OmniSharp_highlight_types = 3
 " Update semantic highlighting on BufEnter and InsertLeave
 " let g:OmniSharp_highlight_types = 2
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -695,10 +724,13 @@ let g:OmniSharp_highlight_types = 3
 
 let g:ale_linters = { 'cs': ['OmniSharp'] }
 
-" call ale#linter#Define('cs', {
-            " \   'name': 'omnisharp',
-            " \   'lsp': 'stdio',
-            " \   'executable': '/Users/huyuhui/Downloads/omnisharp-osx/run',
-            " \   'command': '%e run',
-            " \   'project_root': '.',
-            " \})
+call ale#linter#Define('cs', {
+            \   'name': 'omnisharp',
+            \   'lsp': 'stdio',
+            \   'executable': '/Users/huyuhui/Downloads/omnisharp-osx/run',
+            \   'command': '%e run',
+            \   'project_root': '.',
+            \})
+
+
+
