@@ -5,7 +5,8 @@ set nocompatible
 call plug#begin('~/.local/share/nvim/plugged')
 
 Plug 'https://github.com/scrooloose/nerdtree.git'
-Plug 'https://github.com/majutsushi/tagbar.git'
+" Plug 'https://github.com/majutsushi/tagbar.git'
+Plug 'liuchengxu/vista.vim'
 
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
@@ -14,7 +15,7 @@ Plug 'https://github.com/tpope/vim-fugitive.git'
 
 Plug 'sheerun/vim-polyglot'
 
-" Plug 'OmniSharp/omnisharp-vim'
+Plug 'OmniSharp/omnisharp-vim'
 Plug 'git@github.com:dense-analysis/ale.git'
 
 Plug 'vim-airline/vim-airline'
@@ -32,7 +33,6 @@ Plug 'mileszs/ack.vim'
 
 Plug 'https://github.com/heavenshell/vim-pydocstring.git'
 
-Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }}
 function! BuildComposer(info)
   if a:info.status != 'unchanged' || a:info.force
     if has('nvim')
@@ -120,8 +120,8 @@ let g:oceanic_next_terminal_italic = 1
 " let ayucolor="light"  " for light version of theme
 " let ayucolor="mirage" " for mirage version of theme
 let ayucolor="dark"   " for dark version of theme
-" colo PaperColor
-colo flattened_light
+colo PaperColor
+" colo flattened_light
 " colo challenger_deep
 
 " set background=dark
@@ -213,6 +213,7 @@ function! CommentLine()"{{{
                 \ 'shader': '//',
                 \ 'glsl': '//',
                 \ 'sh': '#',
+                \ 'objc': '//',
                 \}
     let ft = &filetype
     let commtchar = ''
@@ -261,8 +262,8 @@ function! SearchWordGlobal(keyword)
         normal! gv"xy
         let kw = @x
     endif
-    exe "Ack " . kw . ' ./'
     " echo "CAg " . kw . ' ./**/*.' . expand("%:e")
+    exe "Ack " . kw . ''
     let g:g_my_search_keyword = kw
     " let wid = win_getid()
     " win_gotoid(wid)
@@ -307,14 +308,17 @@ function! ReplaceWordGlobal( noConfirm, matchWord)
     endif
 
     call inputsave()
-    let newkw = input("Replace [" . g:g_my_search_keyword . "]by ",  '')
-    call inputrestore()
 
     if(a:matchWord == 0 )
         let replaceCmd =  ":%s/" . g:g_my_search_keyword . "/" . newkw
+        let newkw = input("Replace [" . g:g_my_search_keyword . "]by ",  '')
     else
         let replaceCmd =  ":%s/\\<" . g:g_my_search_keyword . "\\>/" . newkw
+        let newkw = input("Replace Word[" . g:g_my_search_keyword . "]by ",  '')
     endif
+
+    call inputrestore()
+
     if a:noConfirm == 0
         let replaceCmd=  replaceCmd . "/g"
     else
@@ -336,7 +340,7 @@ function! ReplaceWordGlobal( noConfirm, matchWord)
 endfunction
 
 nmap <silent> <leader>r :call ReplaceWordGlobal(1, 0)<CR>
-nmap <silent> <leader>rw :call ReplaceWordGlobal(1, 1)<CR>
+nmap <silent> <leader>w :call ReplaceWordGlobal(1, 1)<CR>
 "}}}
 " find word in correspond file
 "function! SearchWordInCorrespondFile()
@@ -393,6 +397,7 @@ function! AddDescription()
     endif
     let commtdict = {
                 \ 'c': '//',
+                \ 'ts': '//',
                 \ 'cpp': '//',
                 \ 'h': '//',
                 \ 'cs': '//',
@@ -445,7 +450,7 @@ function! AddDescription()
         return 1
     endif
 endfunction
-autocmd FileType c,cpp,h,cs,python exe "call AddDescription()"
+autocmd FileType typescript,c,cpp,h,cs,python exe "call AddDescription()"
 "}}}
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -465,7 +470,7 @@ else
     " set statusline+=%{SyntasticStatuslineFlag()}
     let g:airline_section_z = '%l/%L|B%n' 
     let g:airline#extensions#coc#enabled = 1
-  let g:airline#extensions#ale#enabled = 1
+    let g:airline#extensions#ale#enabled = 1
 endif
 
 """"""""""""""""""""""""""""""for NERDTree"{{{
@@ -473,11 +478,8 @@ endif
 nnoremap <silent> <F7> :let curPath =expand("%:h:p")<Bar> exec "NERDTree " . (len(curPath)<1 ?  "." : curPath)<CR>
 "}}}
 
-""""""""""""""""""""""""""""""""""""""""""" ctags"{{{
-let g:tagbar_left = 1
-let g:tagbar_autopreview = 0
-nnoremap <silent> T :TagbarToggle<CR>
-set tags=../tags,tags
+""""""""""""""""""""""""""""""""""""""""""" Vista"{{{
+nnoremap <silent> T :Vista coc<CR>
 "}}}
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "open current file's header or cpp. toc : t mode o open c corespond."{{{
@@ -559,9 +561,6 @@ nmap <leader>vm :call OpenTerminalSplit('vs')<CR>
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" markdown preview
-nnoremap <F11> :MarkdownPreview<CR>
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " fzf
 nnoremap <C-p> :Files<CR>
 nnoremap <C-f> :Ag<CR>
@@ -573,7 +572,7 @@ autocmd  FileType fzf set laststatus=0 noshowmode noruler
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " COC
-let g:coc_global_extensions=[ 'coc-omnisharp' ]
+" let g:coc_global_extensions=[ 'coc-omnisharp' ]
 let g:airline#extensions#coc#enabled = 1
 " if hidden is not set, TextEdit might fail.
 set hidden
@@ -597,14 +596,14 @@ set signcolumn=yes
 " Use tab for trigger completion with characters ahead and navigate.
 " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
 inoremap <silent><expr> <TAB>
-      \ pumvisible() ? "\<C-n>" :
-      \ <SID>check_back_space() ? "\<TAB>" :
-      \ coc#refresh()
+            \ pumvisible() ? "\<C-n>" :
+            \ <SID>check_back_space() ? "\<TAB>" :
+            \ coc#refresh()
 inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 
 function! s:check_back_space() abort
-  let col = col('.') - 1
-  return !col || getline('.')[col - 1]  =~# '\s'
+    let col = col('.') - 1
+    return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
 
 " Use <c-space> to trigger completion.
@@ -630,15 +629,15 @@ nmap <silent> gr <Plug>(coc-references)
 nnoremap <silent> K :call <SID>show_documentation()<CR>
 
 function! s:show_documentation()
-  if (index(['vim','help'], &filetype) >= 0)
-    execute 'h '.expand('<cword>')
-  else
-    call CocAction('doHover')
-  endif
+    if (index(['vim','help'], &filetype) >= 0)
+        execute 'h '.expand('<cword>')
+    else
+        call CocAction('doHover')
+    endif
 endfunction
 
 " Highlight symbol under cursor on CursorHold
-autocmd CursorHold * silent call CocActionAsync('highlight')
+" autocmd CursorHold * silent call CocActionAsync('highlight')
 
 " Remap for rename current word
 nmap <leader>rn <Plug>(coc-rename)
@@ -648,11 +647,11 @@ nmap <leader>rn <Plug>(coc-rename)
 " nmap <leader>f  <Plug>(coc-format-selected)
 
 augroup mygroup
-  autocmd!
-  " Setup formatexpr specified filetype(s).
-  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
-  " Update signature help on jump placeholder
-  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+    autocmd!
+    " Setup formatexpr specified filetype(s).
+    autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+    " Update signature help on jump placeholder
+    autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
 augroup end
 
 " Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
@@ -678,7 +677,7 @@ omap af <Plug>(coc-funcobj-a)
 command! -nargs=0 Format :call CocAction('format')
 
 " Use `:Fold` to fold current buffer
-command! -nargs=? Fold :call     CocAction('fold', <f-args>)
+" command! -nargs=? Fold :call     CocAction('fold', <f-args>)
 
 " use `:OR` for organize import of current buffer
 command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')
@@ -709,12 +708,12 @@ let g:indent_guides_enable_on_vim_startup = 1
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " " omnisharp
-" let g:OmniSharp_server_path= '/Users/huyuhui/Downloads/omnisharp-osx/run'
-" let g:OmniSharp_server_display_loading = 1
-" let g:OmniSharp_server_stdio = 1
-" let g:OmniSharp_selector_ui = 'ctrlp'
-" let g:OmniSharp_start_server = 1
-
+let g:OmniSharp_server_path='/Users/yuhui/work/tools/omnisharp-osx/run'
+let g:OmniSharp_server_display_loading = 1
+let g:OmniSharp_server_stdio = 1
+let g:OmniSharp_selector_ui = 'ctrlp'
+let g:OmniSharp_start_server = 1
+let g:OmniSharp_selector_findusages = 'fzf'
 " Update semantic highlighting after all text changes
 " let g:OmniSharp_highlight_types = 3
 " Update semantic highlighting on BufEnter and InsertLeave
@@ -727,10 +726,23 @@ let g:ale_linters = { 'cs': ['OmniSharp'] }
 call ale#linter#Define('cs', {
             \   'name': 'omnisharp',
             \   'lsp': 'stdio',
-            \   'executable': '/Users/huyuhui/Downloads/omnisharp-osx/run',
+            \   'executable': '/Users/yuhui/work/tools/omnisharp-osx/run',
             \   'command': '%e run',
             \   'project_root': '.',
             \})
 
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! NearestMethodOrFunction() abort
+    return get(b:, 'vista_nearest_method_or_function', '')
+endfunction
+
+set statusline+=%{NearestMethodOrFunction()}
+
+" By default vista.vim never run if you don't call it explicitly.
+" "
+" " If you want to show the nearest function in your statusline
+" automatically,
+" " you can add the following line to your vimrc
+autocmd VimEnter * call vista#RunForNearestMethodOrFunction()
 
 
