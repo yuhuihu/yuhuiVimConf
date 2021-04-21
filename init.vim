@@ -21,8 +21,12 @@ Plug 'git@github.com:dense-analysis/ale.git'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 " Plug 'https://github.com/Yggdroot/indentLine'
-Plug 'https://github.com/nathanaelkane/vim-indent-guides'
-Plug 'git@github.com:rafi/awesome-vim-colorschemes.git'
+" Plug 'git@github.com:kyazdani42/nvim-tree.lua.git'   " 0.5
+Plug 'git@github.com:lukas-reineke/indent-blankline.nvim.git'   " 0.5
+" Plug 'https://github.com/adelarsq/neoline.vim'   " 0.5
+" If you want to have icons in your statusline choose one of these
+" Plug 'kyazdani42/nvim-web-devicons'
+Plug 'ryanoasis/vim-devicons'
 
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
@@ -46,6 +50,8 @@ endfunction
 Plug 'euclio/vim-markdown-composer', { 'do': function('BuildComposer') }
 Plug 'git@github.com:chrisbra/csv.vim.git'
 
+Plug 'git@github.com:rafi/awesome-vim-colorschemes.git'
+Plug 'norcalli/nvim-colorizer.lua'
 """color scheme
 Plug 'https://github.com/nightsense/vrunchbang.git'
 Plug 'https://github.com/nightsense/snow.git'
@@ -124,7 +130,7 @@ colo PaperColor
 " colo flattened_light
 " colo challenger_deep
 
-" set background=dark
+set background=light
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "file encoding
@@ -745,4 +751,6 @@ set statusline+=%{NearestMethodOrFunction()}
 " " you can add the following line to your vimrc
 autocmd VimEnter * call vista#RunForNearestMethodOrFunction()
 
+vmap <leader>=  <Plug>(coc-format-selected)
+nmap <leader>=  <Plug>(coc-format-selected)
 
