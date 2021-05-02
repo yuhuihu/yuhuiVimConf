@@ -20,12 +20,12 @@ Plug 'git@github.com:dense-analysis/ale.git'
 
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-" Plug 'https://github.com/Yggdroot/indentLine'
+Plug 'https://github.com/Yggdroot/indentLine'
 " Plug 'git@github.com:kyazdani42/nvim-tree.lua.git'   " 0.5
-Plug 'git@github.com:lukas-reineke/indent-blankline.nvim.git'   " 0.5
+" Plug 'git@github.com:lukas-reineke/indent-blankline.nvim.git'   " 0.5
 " Plug 'https://github.com/adelarsq/neoline.vim'   " 0.5
 " If you want to have icons in your statusline choose one of these
-" Plug 'kyazdani42/nvim-web-devicons'
+Plug 'kyazdani42/nvim-web-devicons'
 Plug 'ryanoasis/vim-devicons'
 
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
@@ -39,8 +39,8 @@ Plug 'https://github.com/heavenshell/vim-pydocstring.git'
 
 function! BuildComposer(info)
   if a:info.status != 'unchanged' || a:info.force
-    if has('nvim')
-      !cargo build --release --locked
+      if has('nvim')
+          !cargo build --release --locked
     else
       !cargo build --release --locked --no-default-features --features json-rpc
     endif
@@ -125,8 +125,9 @@ let g:oceanic_next_terminal_italic = 1
 
 " let ayucolor="light"  " for light version of theme
 " let ayucolor="mirage" " for mirage version of theme
-let ayucolor="dark"   " for dark version of theme
-colo PaperColor
+" let ayucolor="dark"   " for dark version of theme
+" colo PaperColor
+colo materialbox
 " colo flattened_light
 " colo challenger_deep
 
@@ -136,8 +137,9 @@ set background=light
 "file encoding
 set fileencodings=utf8,ucs-bom,gbk,cp936,gb18030
 "set termencoding=utf-8,gbk,ucs-bom
-"set encoding=utf-8
-
+set encoding=utf-8
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" format
 
 " session"{{{
 function! SaveSession()
@@ -316,8 +318,8 @@ function! ReplaceWordGlobal( noConfirm, matchWord)
     call inputsave()
 
     if(a:matchWord == 0 )
-        let replaceCmd =  ":%s/" . g:g_my_search_keyword . "/" . newkw
         let newkw = input("Replace [" . g:g_my_search_keyword . "]by ",  '')
+        let replaceCmd =  ":%s/" . g:g_my_search_keyword . "/" . newkw
     else
         let replaceCmd =  ":%s/\\<" . g:g_my_search_keyword . "\\>/" . newkw
         let newkw = input("Replace Word[" . g:g_my_search_keyword . "]by ",  '')
@@ -554,6 +556,7 @@ nmap <silent> <leader>cs :SCROLL<CR>
 highlight mhl1 ctermfg=red guifg=red ctermbg=gray
 highlight mhl2 ctermfg=green guifg=green ctermbg=gray
 highlight mhl3 ctermfg=blue guifg=blue ctermbg=gray
+highlight CocErrorSign ctermbg=red ctermfg=white guifg=blue 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "" terminal
@@ -749,8 +752,14 @@ set statusline+=%{NearestMethodOrFunction()}
 " " If you want to show the nearest function in your statusline
 " automatically,
 " " you can add the following line to your vimrc
+let g:vista#renderer#enable_icon = 1
 autocmd VimEnter * call vista#RunForNearestMethodOrFunction()
 
 vmap <leader>=  <Plug>(coc-format-selected)
 nmap <leader>=  <Plug>(coc-format-selected)
 
+" devicons
+let g:webdevicons_enable_nerdtree = 1
+let g:webdevicons_enable_airline_tabline = 1
+let g:webdevicons_enable_airline_statusline = 1
+let g:webdevicons_enable_ctrlp = 1
