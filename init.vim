@@ -13,13 +13,28 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'https://github.com/vim-scripts/ScrollColors.git'
 Plug 'https://github.com/tpope/vim-fugitive.git'
 
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
+Plug 'git@github.com:Mizux/vim-colorschemes.git'
+
+" Plug 'lukas-reineke/indent-blankline.nvim', {branch = 'lua'}
 Plug 'sheerun/vim-polyglot'
 
 Plug 'OmniSharp/omnisharp-vim'
 Plug 'git@github.com:dense-analysis/ale.git'
 
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
+Plug 'kkoomen/vim-doge', { 'do': { -> doge#install() } }
+
+Plug 'puremourning/vimspector'
+
+
+" Track the engine.
+Plug 'SirVer/ultisnips'
+
+" Snippets are separated from the engine. Add this if you want them:
+Plug 'honza/vim-snippets'
+
+" Plug 'vim-airline/vim-airline'
+" Plug 'vim-airline/vim-airline-themes'
 Plug 'https://github.com/Yggdroot/indentLine'
 " Plug 'git@github.com:kyazdani42/nvim-tree.lua.git'   " 0.5
 " Plug 'git@github.com:lukas-reineke/indent-blankline.nvim.git'   " 0.5
@@ -27,6 +42,8 @@ Plug 'https://github.com/Yggdroot/indentLine'
 " If you want to have icons in your statusline choose one of these
 Plug 'kyazdani42/nvim-web-devicons'
 Plug 'ryanoasis/vim-devicons'
+Plug 'git@github.com:yamatsum/nvim-nonicons.git'
+Plug 'nvim-lua/plenary.nvim'
 
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
@@ -34,41 +51,22 @@ Plug 'junegunn/fzf.vim'
 Plug 'HerringtonDarkholme/yats.vim'
 " Plug 'mhartington/nvim-typescript', {'do': './install.sh'}
 Plug 'mileszs/ack.vim'
-
 Plug 'https://github.com/heavenshell/vim-pydocstring.git'
 
-function! BuildComposer(info)
-  if a:info.status != 'unchanged' || a:info.force
-      if has('nvim')
-          !cargo build --release --locked
-    else
-      !cargo build --release --locked --no-default-features --features json-rpc
-    endif
-  endif
-endfunction
-
-Plug 'euclio/vim-markdown-composer', { 'do': function('BuildComposer') }
-Plug 'git@github.com:chrisbra/csv.vim.git'
-
-Plug 'git@github.com:rafi/awesome-vim-colorschemes.git'
 Plug 'norcalli/nvim-colorizer.lua'
+
 """color scheme
-Plug 'https://github.com/nightsense/vrunchbang.git'
-Plug 'https://github.com/nightsense/snow.git'
 Plug 'https://github.com/lifepillar/vim-wwdc17-theme.git'
-Plug 'https://github.com/hzchirs/vim-material.git'
-Plug 'https://github.com/beigebrucewayne/min_solo.git'
-Plug 'https://github.com/fhrach4/neo-jungle256.git'
 Plug 'https://github.com/arzg/vim-colors-xcode.git'
-Plug 'https://github.com/vim-scripts/mayansmoke.git'
-Plug 'https://github.com/lmintmate/blue-mood-vim.git'
-Plug 'https://github.com/HenryNewcomer/vim-theme-mutenight-scene.git'
-Plug 'https://github.com/schickele/vim.git'
-Plug 'https://github.com/nightsense/seabird.git'
 Plug 'ayu-theme/ayu-vim'
 Plug 'mhartington/oceanic-next'
 
+" with tree-sitter
+Plug 'marko-cerovac/material.nvim'
+Plug 'bluz71/vim-nightfly-guicolors'
+
 call plug#end()
+
 
 
 set diffexpr=MyDiff()"{{{
@@ -119,17 +117,24 @@ set nowrap
 set expandtab
 
 
-let g:airline_theme='oceanicnext'
-let g:oceanic_next_terminal_bold = 1
-let g:oceanic_next_terminal_italic = 1
-
 " let ayucolor="light"  " for light version of theme
 " let ayucolor="mirage" " for mirage version of theme
 " let ayucolor="dark"   " for dark version of theme
-" colo PaperColor
-colo materialbox
+" colo ayu
+colo pencil
+
+" colo xcodelighthc
 " colo flattened_light
 " colo challenger_deep
+" There are 5 different styles of material available:
+" colo material
+" darker
+" lighter
+" oceanic
+" palenight
+" deep ocean
+""""" Set the desired style using:
+let g:material_style = 'oceanic'
 
 set background=light
 
@@ -145,14 +150,14 @@ set encoding=utf-8
 function! SaveSession()
     let ch = confirm("save session ?", "&Yes\n&No", 1)
     if ch == 1
-        exe ":wa"
+        exe ":wa!"
         exe "mksession! .session.vim"
     else
         echo "save session cancle."
     endif
 endfunction
 set sessionoptions=buffers,curdir,resize,folds,tabpages,slash,resize,winpos,winsize
-nmap <F3> :call SaveSession()<CR>
+nmap <F2> :call SaveSession()<CR>
 function! LoadSession(confirmed)
     let aconf = a:confirmed
     if aconf != 1
@@ -164,30 +169,32 @@ function! LoadSession(confirmed)
         echo "load seesion cancled."
     endif
 endfunction
-nmap <F4> :call LoadSession(0)<CR>
+nmap <F3> :call LoadSession(0)<CR>
 "}}}
 let g_my_python_debug = ''
 function! DebugPython()
-    let g:g_my_python_debug = input('python3 debug:', g:g_my_python_debug, 'file')
+    if len(g:g_my_python_debug) < 1
+        let g:g_my_python_debug = input('python3 debug:', expand('%'), 'file')
+    endif
     sp
-    let cmd = "terminal python3 -m pdb -c 'b " . expand('%') . ":" . line('.') . "' -c continue " . g:g_my_python_debug
-    echo 'fuck cmd:' cmd
+    let cmd = "terminal ipdb3 -c 'b " . expand('%') . ":" . line('.') . "' -c continue " . g:g_my_python_debug
+    echo 'cmd:' cmd
     exe cmd
 endfunction
 
-let g_my_python_run = ''
 function! RunPython()
-    let g:g_my_python_run = input('python3 run:', g:g_my_python_run, 'file')
+    if len(g:g_my_python_debug) < 1
+        let g:g_my_python_debug = input('python3 run:', expand('%'), 'file')
+    endif
     sp
-    exe 'terminal python3 ' . g:g_my_python_run
+    exe 'terminal python3 ' . g:g_my_python_debug
 endfunction
 
-autocmd FileType python set makeprg=python\ -c\ \"import\ py_compile,sys;\ sys.stderr=sys.stdout;\ py_compile.compile(r'%')\"
-autocmd FileType python set efm=%C\ %.%#,%A\ \ File\ \"%f\"\\,\ line\ %l%.%#,%Z%[%^\ ]%\\@=%m
+autocmd FileType python set makeprg=python3\ -c\ \"import\ py_compile,sys;\ sys.stderr=sys.stdout;\ py_compile.compile(r'%')\"
+" autocmd FileType python set efm=%C\ %.%#,%A\ \ File\ \"%f\"\\,\ line\ %l%.%#,%Z%[%^\ ]%\\@=%m
 autocmd FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
-autocmd FileType python nmap <silent> <leader>i <Plug>(pydocstring)
-autocmd FileType python nmap <F9> :call DebugPython()<CR>
-autocmd FileType python nmap <F10> :call RunPython()<CR>
+autocmd FileType python nmap ¡ :call DebugPython()<CR>
+autocmd FileType python nmap ™ :call RunPython()<CR>
 
 function! Format_Python()
     let filtePattern = [":%s/\\s*:\\s*/:/g", ":%s/(\\s*/(/g", ":%s/\\s*)/)/g", ":%s/[\\s*/[/g", ":%s/\\s*]/]/g", ":%s/{\\s*/{/g", ":%s/\\s*}/}/g", ":%s/\\s*$//g"]
@@ -261,7 +268,7 @@ map  tu  zz:e!<CR>
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " find word in directories."{{{
-let g:ackprg = 'ag --nogroup --nocolor --column'
+let g:ackprg = 'ag -w --nogroup --nocolor --column'
 let g_my_search_replace_all = 0
 let g_my_search_keyword = ''
 function! SearchWordGlobal(keyword)
@@ -270,8 +277,9 @@ function! SearchWordGlobal(keyword)
         normal! gv"xy
         let kw = @x
     endif
+    let g:ackprg = 'ag -w --nogroup --nocolor --column --' . expand("%:e")
     " echo "CAg " . kw . ' ./**/*.' . expand("%:e")
-    exe "Ack " . kw . ''
+    exe "Ack '" . kw . "'"
     let g:g_my_search_keyword = kw
     " let wid = win_getid()
     " win_gotoid(wid)
@@ -283,8 +291,8 @@ function! SearchWordGlobal(keyword)
     " echo 'search: [' . kw . "] matches " . len(qflst)
 endfunction
 
-nmap <silent> <leader>f :call SearchWordGlobal(expand("<cword>"))<CR>
-vmap <silent> <leader>f :call SearchWordGlobal('')<CR>
+nmap <silent> Tf :call SearchWordGlobal(expand("<cword>"))<CR>
+vmap <silent> Tf :call SearchWordGlobal('')<CR>
 
 function! SearchWordInCurrentFile(kw)
     let keyword = a:kw
@@ -347,8 +355,8 @@ function! ReplaceWordGlobal( noConfirm, matchWord)
     endfor
 endfunction
 
-nmap <silent> <leader>r :call ReplaceWordGlobal(1, 0)<CR>
-nmap <silent> <leader>w :call ReplaceWordGlobal(1, 1)<CR>
+nmap <silent> zr :call ReplaceWordGlobal(1, 0)<CR>
+nmap <silent> zw :call ReplaceWordGlobal(1, 1)<CR>
 "}}}
 " find word in correspond file
 "function! SearchWordInCorrespondFile()
@@ -411,6 +419,7 @@ function! AddDescription()
                 \ 'cs': '//',
                 \ 'python': '#',
                 \ 'vim': '"',
+                \ 'typescript': '//',
                 \}
     let ft = &filetype
     let commtchar = ''
@@ -460,7 +469,20 @@ function! AddDescription()
 endfunction
 autocmd FileType typescript,c,cpp,h,cs,python exe "call AddDescription()"
 "}}}
-
+""""""""""""""""""""
+" coc diagnostic status
+function! StatusDiagnostic() abort
+  let info = get(b:, 'coc_diagnostic_info', {})
+  if empty(info) | return '' | endif
+  let msgs = []
+  if get(info, 'error', 0)
+    call add(msgs, 'E' . info['error'])
+  endif
+  if get(info, 'warning', 0)
+    call add(msgs, 'W' . info['warning'])
+  endif
+  return join(msgs, ' ') . ' ' . get(g:, 'coc_status', '')
+endfunction
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " status line
 if  exists('g:gui_oni')
@@ -471,23 +493,27 @@ if  exists('g:gui_oni')
     " set laststatus=0
     " set noshowcmd
     set laststatus=2
-    set statusline=%<%f\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('【%s】','','f')}%=\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
+    set statusline=%=%{"|"}%f\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('【%s】','','f')}%=\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
 else
     set laststatus=2
-    " set statusline=%<%f\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('【%s】','','f')}%=\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
+    set statusline=\|%-10f\ %y%=buf:%n%h%m%r
+    " set statusline+=%<%{FugitiveHead()}
     " set statusline+=%{SyntasticStatuslineFlag()}
-    let g:airline_section_z = '%l/%L|B%n' 
-    let g:airline#extensions#coc#enabled = 1
-    let g:airline#extensions#ale#enabled = 1
+    " let g:airline_section_z = '%l/%L|B%n' 
+    " let g:airline#extensions#coc#enabled = 1
+    " let g:airline#extensions#ale#enabled = 1
+    set statusline+=%{StatusDiagnostic()}
+    set statusline+=%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\"}
+    set statusline+=%k\|%(%l/%L%)\|%P
 endif
 
 """"""""""""""""""""""""""""""for NERDTree"{{{
 " >> auto change current directory to current openning file.
-nnoremap <silent> <F7> :let curPath =expand("%:h:p")<Bar> exec "NERDTree " . (len(curPath)<1 ?  "." : curPath)<CR>
+nnoremap <silent> Tn :let curPath =expand("%:h:p")<Bar> exec "NERDTree " . (len(curPath)<1 ?  "." : curPath)<CR>
 "}}}
 
 """"""""""""""""""""""""""""""""""""""""""" Vista"{{{
-nnoremap <silent> T :Vista coc<CR>
+nnoremap <silent> Tv :Vista!! <CR>
 "}}}
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "open current file's header or cpp. toc : t mode o open c corespond."{{{
@@ -565,8 +591,8 @@ function! OpenTerminalSplit(cmd)
     exe ":terminal"
     setlocal nowrap
 endfunction
-nmap <leader>m :call OpenTerminalSplit('20split')<CR>
-nmap <leader>vm :call OpenTerminalSplit('vs')<CR>
+nmap zm :call OpenTerminalSplit('20split')<CR>
+nmap zvm :call OpenTerminalSplit('vs')<CR>
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -582,7 +608,7 @@ autocmd  FileType fzf set laststatus=0 noshowmode noruler
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " COC
 " let g:coc_global_extensions=[ 'coc-omnisharp' ]
-let g:airline#extensions#coc#enabled = 1
+" let g:airline#extensions#coc#enabled = 1
 " if hidden is not set, TextEdit might fail.
 set hidden
 
@@ -649,28 +675,28 @@ endfunction
 " autocmd CursorHold * silent call CocActionAsync('highlight')
 
 " Remap for rename current word
-nmap <leader>rn <Plug>(coc-rename)
+nmap Trn <Plug>(coc-rename)
 
 " Remap for format selected region
-" xmap <leader>f  <Plug>(coc-format-selected)
-" nmap <leader>f  <Plug>(coc-format-selected)
+" xmap lf  <Plug>(coc-format-selected)
+" nmap lf  <Plug>(coc-format-selected)
 
 augroup mygroup
     autocmd!
     " Setup formatexpr specified filetype(s).
-    autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+    autocmd FileType python,typescript,json setl formatexpr=CocAction('formatSelected')
     " Update signature help on jump placeholder
     autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
 augroup end
 
-" Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
-xmap <leader>a  <Plug>(coc-codeaction-selected)
-nmap <leader>a  <Plug>(coc-codeaction-selected)
+" Remap for do codeAction of selected region, ex: `laap` for current paragraph
+xmap ta  <Plug>(coc-codeaction-selected)
+nmap ta  <Plug>(coc-codeaction-selected)
 
 " Remap for do codeAction of current line
-nmap <leader>ac  <Plug>(coc-codeaction)
+nmap tac  <Plug>(coc-codeaction)
 " Fix autofix problem of current line
-nmap <leader>qf  <Plug>(coc-fix-current)
+nmap tqf  <Plug>(coc-fix-current)
 
 " Create mappings for function text object, requires document symbols feature of languageserver.
 xmap if <Plug>(coc-funcobj-i)
@@ -692,7 +718,7 @@ command! -nargs=0 Format :call CocAction('format')
 command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')
 
 " Add status line support, for integration with other plugin, checkout `:h coc-status`
-set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
+set statusline^=%<%{coc#status()}%{get(b:,'coc_current_function','')}%<
 
 " Using CocList
 " Show all diagnostics
@@ -711,6 +737,20 @@ nnoremap <silent> <space>j  :<C-u>CocNext<CR>
 nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
 " Resume latest coc list
 nnoremap <silent> <space>p  :<C-u>CocListResume<CR>
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+inoremap <silent><expr> <TAB>
+      \ pumvisible() ? coc#_select_confirm() :
+      \ coc#expandableOrJumpable() ? "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" :
+      \ <SID>check_back_space() ? "\<TAB>" :
+      \ coc#refresh()
+
+function! s:check_back_space() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+let g:coc_snippet_next = '<tab>'
+
 " "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "
 " vim indent
 let g:indent_guides_enable_on_vim_startup = 1
@@ -720,7 +760,7 @@ let g:indent_guides_enable_on_vim_startup = 1
 let g:OmniSharp_server_path='/Users/yuhui/work/tools/omnisharp-osx/run'
 let g:OmniSharp_server_display_loading = 1
 let g:OmniSharp_server_stdio = 1
-let g:OmniSharp_selector_ui = 'ctrlp'
+let g:OmniSharp_selector_ui = 'fzf'
 let g:OmniSharp_start_server = 1
 let g:OmniSharp_selector_findusages = 'fzf'
 " Update semantic highlighting after all text changes
@@ -745,7 +785,7 @@ function! NearestMethodOrFunction() abort
     return get(b:, 'vista_nearest_method_or_function', '')
 endfunction
 
-set statusline+=%{NearestMethodOrFunction()}
+set statusline+=%{NearestMethodOrFunction()}|
 
 " By default vista.vim never run if you don't call it explicitly.
 " "
@@ -755,11 +795,69 @@ set statusline+=%{NearestMethodOrFunction()}
 let g:vista#renderer#enable_icon = 1
 autocmd VimEnter * call vista#RunForNearestMethodOrFunction()
 
-vmap <leader>=  <Plug>(coc-format-selected)
-nmap <leader>=  <Plug>(coc-format-selected)
+vmap t=  <Plug>(coc-format-selected)
+nmap t=  <Plug>(coc-format-selected)
 
 " devicons
 let g:webdevicons_enable_nerdtree = 1
-let g:webdevicons_enable_airline_tabline = 1
-let g:webdevicons_enable_airline_statusline = 1
-let g:webdevicons_enable_ctrlp = 1
+let g:webdevicons_enable_airline_tabline = 0
+let g:webdevicons_enable_airline_statusline = 0
+let g:webdevicons_enable_ctrlp = 0
+
+""""""""""""""""""""
+" doge 
+"
+let g:doge_enable_mappings = 1
+let g:doge_mapping_comment_jump_forward = 1
+let g:doge_mapping_comment_jump_backward = 1
+
+""""""""""
+" snippet
+" Trigger configuration. You need to change this to something other than <tab> if you use one of the following:
+" - https://github.com/Valloric/YouCompleteMe
+" - https://github.com/nvim-lua/completion-nvim
+let g:UltiSnipsExpandTrigger="<tab>"
+let g:UltiSnipsJumpForwardTrigger="<c-b>"
+let g:UltiSnipsJumpBackwardTrigger="<c-z>"
+
+" If you want :UltiSnipsEdit to split your window.
+let g:UltiSnipsEditSplit="vertical"
+
+"""""""""""""""""""""
+" colorizer.lua
+lua require'colorizer'.setup()
+""""""""""""""""""""
+" vim inspector
+" let g:vimspector_enable_mappings = 'HUMAN'
+nmap <leader>vl :call vimspector#Launch()<CR>
+nmap <leader>vr :VimspectorReset<CR>
+nmap <leader>ve :VimspectorEval
+nmap <leader>vw :VimspectorWatch
+nmap <leader>vo :VimspectorShowOutput
+nmap <leader>vi <Plug>VimspectorBalloonEval
+xmap <leader>vi <Plug>VimspectorBalloonEval
+let g:vimspector_install_gadgets = [ 'debugpy', 'vscode-go', 'CodeLLDB', 'vscode-node-debug2' ]
+"" launch debug
+nmap † <Plug>VimspectorContinue
+"" toggle breakpoint
+nmap ∫ <Plug>VimspectorToggleBreakpoint
+"" step into
+nmap ˆ <Plug>VimspectorStepInto
+"" step out
+nmap ø <Plug>VimspectorStepOut
+"" step over
+nmap ˜ <Plug>VimspectorStepOver
+"" up frame  | Move up a frame in the current call stack                 | 'vimspector#UpFrame()'                                            |
+nmap ˚ <Plug>VimspectorUpFrame
+"" down frame | Move down a frame in the current call stack               | 'vimspector#DownFrame()'                                          |" down frame
+nmap ∆ <Plug>VimspectorDownFrame
+
+""""""""""""""""""""
+" clear cocos temp files
+function! ClearCreatorTemps()
+    let cmd = "terminal ls; echo '-------deleted----------'; rm -rf ./local ./temp ./library;ls"
+    " echo 'cmd:' cmd
+    exe cmd
+endfunction
+
+set spelllang=en,cjk
