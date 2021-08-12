@@ -9,6 +9,7 @@ Plug 'https://github.com/scrooloose/nerdtree.git'
 Plug 'liuchengxu/vista.vim'
 
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'pappasam/coc-jedi', { 'do': 'yarn install --frozen-lockfile && yarn build' }
 
 Plug 'https://github.com/vim-scripts/ScrollColors.git'
 Plug 'https://github.com/tpope/vim-fugitive.git'
@@ -24,14 +25,13 @@ Plug 'git@github.com:dense-analysis/ale.git'
 
 Plug 'kkoomen/vim-doge', { 'do': { -> doge#install() } }
 
+Plug 'Eric-Song-Nop/vim-glslx'
 Plug 'puremourning/vimspector'
 
 
 " Track the engine.
-Plug 'SirVer/ultisnips'
-
-" Snippets are separated from the engine. Add this if you want them:
-Plug 'honza/vim-snippets'
+Plug 'hrsh7th/vim-vsnip'
+Plug 'hrsh7th/vim-vsnip-integ'
 
 " Plug 'vim-airline/vim-airline'
 " Plug 'vim-airline/vim-airline-themes'
@@ -41,7 +41,7 @@ Plug 'https://github.com/Yggdroot/indentLine'
 " Plug 'https://github.com/adelarsq/neoline.vim'   " 0.5
 " If you want to have icons in your statusline choose one of these
 Plug 'kyazdani42/nvim-web-devicons'
-Plug 'ryanoasis/vim-devicons'
+" Plug 'ryanoasis/vim-devicons'
 Plug 'git@github.com:yamatsum/nvim-nonicons.git'
 Plug 'nvim-lua/plenary.nvim'
 
@@ -214,6 +214,7 @@ autocmd FileType python nmap <leader>fm :call Format_Python()<CR>
 function! CommentLine()"{{{
     let commtdict = {
                 \ 'lua': '--',
+                \ 'toml': '#',
                 \ 'java': '//',
                 \ 'c': '//',
                 \ 'cpp': '//',
@@ -277,6 +278,28 @@ function! SearchWordGlobal(keyword)
         normal! gv"xy
         let kw = @x
     endif
+    """" escap
+    let tidx = stridx(kw, ".")
+    if tidx >= 0
+        let kw = strpart(kw, 0, tidx) . '\' . strpart(kw, tidx, len(kw))
+    endif
+    let tidx = stridx(kw, "/")
+    if tidx >= 0
+        let kw = strpart(kw, 0, tidx) . '\' . strpart(kw, tidx, len(kw))
+    endif
+    let tidx = stridx(kw, "'")
+    if tidx >= 0
+        let kw = strpart(kw, 0, tidx) . '\' . strpart(kw, tidx, len(kw))
+    endif
+    " let tidx = stridx(kw, "(")
+    " if tidx >= 0
+        " let kw = strpart(kw, 0, tidx) . '\' . strpart(kw, tidx, len(kw))
+    " endif
+    " let tidx = stridx(kw, ")")
+    " if tidx >= 0
+        " let kw = strpart(kw, 0, tidx) . '\' . strpart(kw, tidx, len(kw))
+    " endif
+
     let g:ackprg = 'ag -w --nogroup --nocolor --column --' . expand("%:e")
     " echo "CAg " . kw . ' ./**/*.' . expand("%:e")
     exe "Ack '" . kw . "'"
@@ -497,12 +520,13 @@ if  exists('g:gui_oni')
 else
     set laststatus=2
     set statusline=\|%-10f\ %y%=buf:%n%h%m%r
-    " set statusline+=%<%{FugitiveHead()}
+    set statusline+=%<%{FugitiveHead()}
+    " set statusline+=%<%{'win:' . winnr()}
     " set statusline+=%{SyntasticStatuslineFlag()}
     " let g:airline_section_z = '%l/%L|B%n' 
     " let g:airline#extensions#coc#enabled = 1
     " let g:airline#extensions#ale#enabled = 1
-    set statusline+=%{StatusDiagnostic()}
+    " set statusline+=%{StatusDiagnostic()}
     set statusline+=%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\"}
     set statusline+=%k\|%(%l/%L%)\|%P
 endif
@@ -605,12 +629,131 @@ autocmd! FileType fzf
 autocmd  FileType fzf set laststatus=0 noshowmode noruler
             \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler
 
+
+" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "
+" vim indent
+let g:indent_guides_enable_on_vim_startup = 1
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" " omnisharp
+let g:OmniSharp_server_install='/Users/yuhui/work/tool/omnisharp-osx/'
+let g:OmniSharp_server_path='/Users/yuhui/work/tool/omnisharp-osx/omnisharp/OmniSharp.exe'
+let g:OmniSharp_server_display_loading = 1
+let g:OmniSharp_server_use_mono = 1
+let g:OmniSharp_server_stdio = 1
+let g:OmniSharp_selector_ui = 'fzf'
+let g:OmniSharp_start_server = 1
+let g:OmniSharp_selector_findusages = 'fzf'
+let g:OmniSharp_popup = 1
+" Update semantic highlighting after all text changes
+let g:OmniSharp_highlight_types = 3
+" Update semantic highlighting on BufEnter and InsertLeave
+" let g:OmniSharp_highlight_types = 2
+autocmd CursorHold *.cs OmniSharpTypeLookup
+autocmd FileType cs nmap <silent> <buffer> gd <Plug>(omnisharp_go_to_definition)
+autocmd FileType cs nmap <silent> <buffer> Fu <Plug>(omnisharp_find_usages)
+autocmd FileType cs nmap <silent> <buffer> Ft <Plug>(omnisharp_find_type)
+autocmd FileType cs nmap <silent> <buffer> Fs <Plug>(omnisharp_find_symbol)
+autocmd FileType cs nmap <silent> <buffer> Fa <Plug>(omnisharp_code_actions)
+autocmd FileType cs xmap <silent> <buffer> Fa <Plug>(omnisharp_code_actions)
+autocmd FileType cs nmap <silent> <buffer> Fx <Plug>(omnisharp_fix_usings)
+autocmd FileType cs nmap <silent> <buffer> Fk <Plug>(omnisharp_documentation)
+autocmd FileType cs nmap <silent> <buffer> Fm <Plug>(omnisharp_code_format)
+autocmd FileType cs nmap <silent> <buffer> Fr <Plug>(omnisharp_rename)
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" ALE
+
+let g:ale_linters = { 'cs': ['OmniSharp'] }
+
+" call ale#linter#Define('cs', {
+" \   'name': 'omnisharp',
+" \   'lsp': 'stdio',
+" \   'executable': '/Users/yuhui/work/tool/omnisharp-osx/run',
+" \   'command': '%e run',
+" \   'project_root': '.',
+" \})
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! NearestMethodOrFunction() abort
+    return get(b:, 'vista_nearest_method_or_function', '')
+endfunction
+
+set statusline+=%{NearestMethodOrFunction()}|
+
+" By default vista.vim never run if you don't call it explicitly.
+" "
+" " If you want to show the nearest function in your statusline
+" automatically,
+" " you can add the following line to your vimrc
+let g:vista#renderer#enable_icon = 1
+autocmd VimEnter * call vista#RunForNearestMethodOrFunction()
+
+" vmap t=  <Plug>(coc-format-selected)
+" nmap t=  <Plug>(coc-format-selected)
+
+" devicons
+let g:webdevicons_enable_nerdtree = 1
+let g:webdevicons_enable_airline_tabline = 0
+let g:webdevicons_enable_airline_statusline = 0
+let g:webdevicons_enable_ctrlp = 0
+
+""""""""""""""""""""
+" doge 
+"
+let g:doge_enable_mappings = 1
+let g:doge_mapping_comment_jump_forward = 1
+let g:doge_mapping_comment_jump_backward = 1
+
+""""""""""
+" snippet
+let g:vsnip_snippet_dir = expand('~/work/yuhuiVimConf/vsnips')
+
+"""""""""""""""""""""
+" colorizer.lua
+lua require'colorizer'.setup()
+""""""""""""""""""""
+" vim inspector
+" let g:vimspector_enable_mappings = 'HUMAN'
+nmap <leader>vl :call vimspector#Launch()<CR>
+nmap <leader>vr :VimspectorReset<CR>
+nmap <leader>ve :VimspectorEval
+nmap <leader>vw :VimspectorWatch
+nmap <leader>vo :VimspectorShowOutput
+nmap <leader>vi <Plug>VimspectorBalloonEval
+xmap <leader>vi <Plug>VimspectorBalloonEval
+let g:vimspector_install_gadgets = [ 'debugpy', 'vscode-go', 'CodeLLDB', 'vscode-node-debug2' ]
+"" launch debug
+nmap † <Plug>VimspectorContinue
+"" toggle breakpoint
+nmap ∫ <Plug>VimspectorToggleBreakpoint
+"" step into
+nmap ˆ <Plug>VimspectorStepInto
+"" step out
+nmap ø <Plug>VimspectorStepOut
+"" step over
+nmap ˜ <Plug>VimspectorStepOver
+"" up frame  | Move up a frame in the current call stack                 | 'vimspector#UpFrame()'                                            |
+nmap ˚ <Plug>VimspectorUpFrame
+"" down frame | Move down a frame in the current call stack               | 'vimspector#DownFrame()'                                          |" down frame
+nmap ∆ <Plug>VimspectorDownFrame
+
+""""""""""""""""""""
+" clear cocos temp files
+function! ClearCreatorTemps()
+    let cmd = "terminal ls; echo '-------deleted----------'; rm -rf ./local ./temp ./library;ls"
+    " echo 'cmd:' cmd
+    exe cmd
+endfunction
+
+set spelllang=en,cjk
+
+
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " COC
-" let g:coc_global_extensions=[ 'coc-omnisharp' ]
 " let g:airline#extensions#coc#enabled = 1
 " if hidden is not set, TextEdit might fail.
 set hidden
+
+let g:coc_global_extensions=['coc-omnisharp']
 
 " Some servers have issues with backup files, see #649
 set nobackup
@@ -672,7 +815,7 @@ function! s:show_documentation()
 endfunction
 
 " Highlight symbol under cursor on CursorHold
-" autocmd CursorHold * silent call CocActionAsync('highlight')
+autocmd CursorHold * silent call CocActionAsync('highlight')
 
 " Remap for rename current word
 nmap Trn <Plug>(coc-rename)
@@ -739,125 +882,19 @@ nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
 nnoremap <silent> <space>p  :<C-u>CocListResume<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 inoremap <silent><expr> <TAB>
-      \ pumvisible() ? coc#_select_confirm() :
-      \ coc#expandableOrJumpable() ? "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" :
-      \ <SID>check_back_space() ? "\<TAB>" :
-      \ coc#refresh()
+            \ pumvisible() ? coc#_select_confirm() :
+            \ coc#expandableOrJumpable() ? "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" :
+            \ <SID>check_back_space() ? "\<TAB>" :
+            \ coc#refresh()
 
 function! s:check_back_space() abort
-  let col = col('.') - 1
-  return !col || getline('.')[col - 1]  =~# '\s'
+    let col = col('.') - 1
+    return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
 
-let g:coc_snippet_next = '<tab>'
 
-" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "
-" vim indent
-let g:indent_guides_enable_on_vim_startup = 1
-
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" " omnisharp
-let g:OmniSharp_server_path='/Users/yuhui/work/tools/omnisharp-osx/run'
-let g:OmniSharp_server_display_loading = 1
-let g:OmniSharp_server_stdio = 1
-let g:OmniSharp_selector_ui = 'fzf'
-let g:OmniSharp_start_server = 1
-let g:OmniSharp_selector_findusages = 'fzf'
-" Update semantic highlighting after all text changes
-" let g:OmniSharp_highlight_types = 3
-" Update semantic highlighting on BufEnter and InsertLeave
-" let g:OmniSharp_highlight_types = 2
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" ALE
-
-let g:ale_linters = { 'cs': ['OmniSharp'] }
-
-call ale#linter#Define('cs', {
-            \   'name': 'omnisharp',
-            \   'lsp': 'stdio',
-            \   'executable': '/Users/yuhui/work/tools/omnisharp-osx/run',
-            \   'command': '%e run',
-            \   'project_root': '.',
-            \})
-
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-function! NearestMethodOrFunction() abort
-    return get(b:, 'vista_nearest_method_or_function', '')
+function! SetupReHost()
+    if writefile([v:servername], '/Users/yuhui/.config/nvim/nvimserver')
+        echomsg 'nvim 服务器名称写出失败'
+    endif
 endfunction
-
-set statusline+=%{NearestMethodOrFunction()}|
-
-" By default vista.vim never run if you don't call it explicitly.
-" "
-" " If you want to show the nearest function in your statusline
-" automatically,
-" " you can add the following line to your vimrc
-let g:vista#renderer#enable_icon = 1
-autocmd VimEnter * call vista#RunForNearestMethodOrFunction()
-
-vmap t=  <Plug>(coc-format-selected)
-nmap t=  <Plug>(coc-format-selected)
-
-" devicons
-let g:webdevicons_enable_nerdtree = 1
-let g:webdevicons_enable_airline_tabline = 0
-let g:webdevicons_enable_airline_statusline = 0
-let g:webdevicons_enable_ctrlp = 0
-
-""""""""""""""""""""
-" doge 
-"
-let g:doge_enable_mappings = 1
-let g:doge_mapping_comment_jump_forward = 1
-let g:doge_mapping_comment_jump_backward = 1
-
-""""""""""
-" snippet
-" Trigger configuration. You need to change this to something other than <tab> if you use one of the following:
-" - https://github.com/Valloric/YouCompleteMe
-" - https://github.com/nvim-lua/completion-nvim
-let g:UltiSnipsExpandTrigger="<tab>"
-let g:UltiSnipsJumpForwardTrigger="<c-b>"
-let g:UltiSnipsJumpBackwardTrigger="<c-z>"
-
-" If you want :UltiSnipsEdit to split your window.
-let g:UltiSnipsEditSplit="vertical"
-
-"""""""""""""""""""""
-" colorizer.lua
-lua require'colorizer'.setup()
-""""""""""""""""""""
-" vim inspector
-" let g:vimspector_enable_mappings = 'HUMAN'
-nmap <leader>vl :call vimspector#Launch()<CR>
-nmap <leader>vr :VimspectorReset<CR>
-nmap <leader>ve :VimspectorEval
-nmap <leader>vw :VimspectorWatch
-nmap <leader>vo :VimspectorShowOutput
-nmap <leader>vi <Plug>VimspectorBalloonEval
-xmap <leader>vi <Plug>VimspectorBalloonEval
-let g:vimspector_install_gadgets = [ 'debugpy', 'vscode-go', 'CodeLLDB', 'vscode-node-debug2' ]
-"" launch debug
-nmap † <Plug>VimspectorContinue
-"" toggle breakpoint
-nmap ∫ <Plug>VimspectorToggleBreakpoint
-"" step into
-nmap ˆ <Plug>VimspectorStepInto
-"" step out
-nmap ø <Plug>VimspectorStepOut
-"" step over
-nmap ˜ <Plug>VimspectorStepOver
-"" up frame  | Move up a frame in the current call stack                 | 'vimspector#UpFrame()'                                            |
-nmap ˚ <Plug>VimspectorUpFrame
-"" down frame | Move down a frame in the current call stack               | 'vimspector#DownFrame()'                                          |" down frame
-nmap ∆ <Plug>VimspectorDownFrame
-
-""""""""""""""""""""
-" clear cocos temp files
-function! ClearCreatorTemps()
-    let cmd = "terminal ls; echo '-------deleted----------'; rm -rf ./local ./temp ./library;ls"
-    " echo 'cmd:' cmd
-    exe cmd
-endfunction
-
-set spelllang=en,cjk

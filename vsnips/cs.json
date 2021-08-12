@@ -1,0 +1,6 @@
+{
+    "logInf":{
+        "prefix": "logi",
+        "body":"Log.Info($\"\");"
+    }
+}
