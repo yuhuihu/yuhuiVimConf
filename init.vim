@@ -279,27 +279,13 @@ function! SearchWordGlobal(keyword)
         let kw = @x
     endif
     """" escap
-    let tidx = stridx(kw, ".")
-    if tidx >= 0
-        let kw = strpart(kw, 0, tidx) . '\' . strpart(kw, tidx, len(kw))
-    endif
-    let tidx = stridx(kw, "/")
-    if tidx >= 0
-        let kw = strpart(kw, 0, tidx) . '\' . strpart(kw, tidx, len(kw))
-    endif
-    let tidx = stridx(kw, "'")
-    if tidx >= 0
-        let kw = strpart(kw, 0, tidx) . '\' . strpart(kw, tidx, len(kw))
-    endif
-    " let tidx = stridx(kw, "(")
-    " if tidx >= 0
-        " let kw = strpart(kw, 0, tidx) . '\' . strpart(kw, tidx, len(kw))
-    " endif
-    " let tidx = stridx(kw, ")")
-    " if tidx >= 0
-        " let kw = strpart(kw, 0, tidx) . '\' . strpart(kw, tidx, len(kw))
-    " endif
-
+    let toescaps = [".", "/", "'", "[", "]"]
+    for tk in toescaps
+        let tidx = stridx(kw, tk)
+        if tidx >= 0
+            let kw = strpart(kw, 0, tidx) . '\' . strpart(kw, tidx, len(kw))
+        endif
+    endfor
     let g:ackprg = 'ag -w --nogroup --nocolor --column --' . expand("%:e")
     " echo "CAg " . kw . ' ./**/*.' . expand("%:e")
     exe "Ack '" . kw . "'"
@@ -389,6 +375,65 @@ nmap <silent> zw :call ReplaceWordGlobal(1, 1)<CR>
 "exe ":cw"
 "endfunction
 "autocmd FileType c,cpp nmap tof :call SearchWordInCorrespondFile()<CR>
+"
+" swap word
+function SplitAndSwap()
+    normal! gv"xy
+    let keyword = @x
+
+    let istailc = 0
+    if keyword[ len(keyword) -1] == ';'
+        let istailc = 1
+    endif
+
+    let words = split(keyword, '[:=;]')
+    " echo words
+    let outs = words[1] . " " . words[0]
+    if istailc
+        let outs = outs . ";"
+    endif 
+    for tw in words[2:]
+        let outs = outs . tw
+    endfor
+    " echo "rslt: " . outs
+    call setline(".", substitute(getline("."), keyword, outs, ""))
+    return outs
+endfunction
+vmap <silent> ts: call SplitAndSwap()<CR>
+
+function! ConvertTs2cs()
+    let cmds = [
+                \':%s/console.error(/Log.Error(/g',
+                \':%s/console.log(/Log.Info(/g',
+                \':%s/(\s*`/($"/gc',
+                \':%s/^\s*\t*`/$"/gc',
+                \':%s/`/"/g',
+                \':%s/${/{/g',
+                \':%s/\<let\>/var/g',
+                \':%s/\.length/.Length/g',
+                \':%s/\.clear/.Clear/g',
+                \':%s/\<number\>/float/g',
+                \':%s/\.push/.Add/g',
+                \':%s/^\s*export\s\+function\s\+/public void /g',
+                \':%s/^\s*export\s\+namesapce/public/g',
+                \':%s/^\s*export\s\+/public/g',
+                \':%s/math.floor/Mathf.Floor/g',
+                \':%s/math.abs/Mathf.Abs/g',
+                \':%s/math.random()/UnityEngine.Random.value/g',
+                \':%s/Map</Dictionary</g',
+                \':%s/\<toString\>/ToString/g',
+                \]
+    " echo cmds
+    for tc in cmds
+        try
+            echo "regx:" . tc
+            exe tc
+        catch E486
+            " echo "no need fix"
+        endtry
+    endfor
+    return
+endfunction
 
 " hex model
 nnoremap <silent> hex  :%!xxd<CR>
@@ -706,6 +751,28 @@ let g:doge_mapping_comment_jump_backward = 1
 """"""""""
 " snippet
 let g:vsnip_snippet_dir = expand('~/work/yuhuiVimConf/vsnips')
+" NOTE: You can use other key to expand snippet.
+
+" Expand
+imap <expr> <C-j>   vsnip#expandable()  ? '<Plug>(vsnip-expand)'         : '<C-j>'
+smap <expr> <C-j>   vsnip#expandable()  ? '<Plug>(vsnip-expand)'         : '<C-j>'
+
+" Expand or jump
+imap <expr> <C-l>   vsnip#available(1)  ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>'
+smap <expr> <C-l>   vsnip#available(1)  ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>'
+
+" Jump forward or backward
+imap <expr> <Tab>   vsnip#jumpable(1)   ? '<Plug>(vsnip-jump-next)'      : '<Tab>'
+smap <expr> <Tab>   vsnip#jumpable(1)   ? '<Plug>(vsnip-jump-next)'      : '<Tab>'
+imap <expr> <S-Tab> vsnip#jumpable(-1)  ? '<Plug>(vsnip-jump-prev)'      : '<S-Tab>'
+smap <expr> <S-Tab> vsnip#jumpable(-1)  ? '<Plug>(vsnip-jump-prev)'      : '<S-Tab>'
+
+" Select or cut text to use as $TM_SELECTED_TEXT in the next snippet.
+" See https://github.com/hrsh7th/vim-vsnip/pull/50
+nmap        s   <Plug>(vsnip-select-text)
+xmap        s   <Plug>(vsnip-select-text)
+nmap        S   <Plug>(vsnip-cut-text)
+xmap        S   <Plug>(vsnip-cut-text)
 
 """""""""""""""""""""
 " colorizer.lua
@@ -897,4 +964,27 @@ function! SetupReHost()
     if writefile([v:servername], '/Users/yuhui/.config/nvim/nvimserver')
         echomsg 'nvim 服务器名称写出失败'
     endif
+endfunction
+
+function! OpenUnityLog() 
+    exec "vert new"
+    setlocal buftype=nofile
+    setlocal noswapfile
+    exec 'read ~/Library/Logs/Unity/Editor.log'
+    let cmds = [
+                \':g/^\s*com.unity.*/d',
+                \':g/^Unity\w\+.*/d',
+                \':g/^(Filename:.*/d',
+                \]
+    " echo cmds
+    for tc in cmds
+        try
+            echo "regx:" . tc
+            exe tc
+        catch E486
+            " echo "no need fix"
+        endtry
+    endfor
+
+
 endfunction

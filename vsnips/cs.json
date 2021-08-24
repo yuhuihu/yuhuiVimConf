@@ -1,6 +1,23 @@
 {
     "logInf":{
         "prefix": "logi",
-        "body":"Log.Info($\"\");"
+        "body":"Log.Info(\\$\"${1}\");"
+    },
+    "logError":{
+        "prefix": "loge",
+        "body":"Log.Error(\\$\"${1}\");"
+    },
+    "string is null or empty":{
+        "prefix": ["string"],
+        "body":"string.IsNullOrEmpty(${1:$TM_SELECTED_TEXT})"
+    },
+    "for int":{
+        "prefix": "for",
+        "body": [
+            "for(int ti = 0; ti < ${1}; ti ++ )",
+            "{",
+            "}"
+        ]
     }
 }
+
