@@ -33,7 +33,7 @@ Plug 'puremourning/vimspector'
 Plug 'hrsh7th/vim-vsnip'
 Plug 'hrsh7th/vim-vsnip-integ'
 
-" Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline'
 " Plug 'vim-airline/vim-airline-themes'
 Plug 'https://github.com/Yggdroot/indentLine'
 " Plug 'git@github.com:kyazdani42/nvim-tree.lua.git'   " 0.5
@@ -563,14 +563,14 @@ if  exists('g:gui_oni')
     set laststatus=2
     set statusline=%=%{"|"}%f\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('【%s】','','f')}%=\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
 else
+    let g:airline#extensions#coc#enabled = 1
+    let g:airline#extensions#ale#enabled = 1
     set laststatus=2
     set statusline=\|%-10f\ %y%=buf:%n%h%m%r
     set statusline+=%<%{FugitiveHead()}
     " set statusline+=%<%{'win:' . winnr()}
     " set statusline+=%{SyntasticStatuslineFlag()}
     " let g:airline_section_z = '%l/%L|B%n' 
-    " let g:airline#extensions#coc#enabled = 1
-    " let g:airline#extensions#ale#enabled = 1
     " set statusline+=%{StatusDiagnostic()}
     set statusline+=%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\"}
     set statusline+=%k\|%(%l/%L%)\|%P
@@ -700,7 +700,6 @@ autocmd FileType cs nmap <silent> <buffer> Fu <Plug>(omnisharp_find_usages)
 autocmd FileType cs nmap <silent> <buffer> Ft <Plug>(omnisharp_find_type)
 autocmd FileType cs nmap <silent> <buffer> Fs <Plug>(omnisharp_find_symbol)
 autocmd FileType cs nmap <silent> <buffer> Fa <Plug>(omnisharp_code_actions)
-autocmd FileType cs xmap <silent> <buffer> Fa <Plug>(omnisharp_code_actions)
 autocmd FileType cs nmap <silent> <buffer> Fx <Plug>(omnisharp_fix_usings)
 autocmd FileType cs nmap <silent> <buffer> Fk <Plug>(omnisharp_documentation)
 autocmd FileType cs nmap <silent> <buffer> Fm <Plug>(omnisharp_code_format)
@@ -718,19 +717,18 @@ let g:ale_linters = { 'cs': ['OmniSharp'] }
 " \   'project_root': '.',
 " \})
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-function! NearestMethodOrFunction() abort
-    return get(b:, 'vista_nearest_method_or_function', '')
-endfunction
-
-set statusline+=%{NearestMethodOrFunction()}|
+" function! NearestMethodOrFunction() abort
+    " return get(b:, 'vista_nearest_method_or_function', '')
+" endfunction
+" set statusline+=%{NearestMethodOrFunction()}|
 
 " By default vista.vim never run if you don't call it explicitly.
 " "
 " " If you want to show the nearest function in your statusline
 " automatically,
 " " you can add the following line to your vimrc
-let g:vista#renderer#enable_icon = 1
-autocmd VimEnter * call vista#RunForNearestMethodOrFunction()
+" let g:vista#renderer#enable_icon = 1
+" autocmd VimEnter * call vista#RunForNearestMethodOrFunction()
 
 " vmap t=  <Plug>(coc-format-selected)
 " nmap t=  <Plug>(coc-format-selected)
@@ -975,6 +973,7 @@ function! OpenUnityLog()
                 \':g/^\s*com.unity.*/d',
                 \':g/^Unity\w\+.*/d',
                 \':g/^(Filename:.*/d',
+                \':g/^BB.Log.*/d',
                 \]
     " echo cmds
     for tc in cmds
@@ -988,3 +987,5 @@ function! OpenUnityLog()
 
 
 endfunction
+command  OpenUlog call OpenUnityLog()
+
