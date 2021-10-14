@@ -55,6 +55,8 @@ Plug 'https://github.com/heavenshell/vim-pydocstring.git'
 
 Plug 'norcalli/nvim-colorizer.lua'
 
+Plug 'frazrepo/vim-rainbow'
+
 """color scheme
 Plug 'https://github.com/lifepillar/vim-wwdc17-theme.git'
 Plug 'https://github.com/arzg/vim-colors-xcode.git'
@@ -64,6 +66,7 @@ Plug 'mhartington/oceanic-next'
 " with tree-sitter
 Plug 'marko-cerovac/material.nvim'
 Plug 'bluz71/vim-nightfly-guicolors'
+
 
 call plug#end()
 
@@ -646,6 +649,10 @@ nmap <silent> <leader>cs :SCROLL<CR>
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" airline
+AirlineTheme oceanicnextlight
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " higroup
 
 highlight mhl1 ctermfg=red guifg=red ctermbg=gray
@@ -688,7 +695,7 @@ let g:OmniSharp_server_use_mono = 1
 let g:OmniSharp_server_stdio = 1
 let g:OmniSharp_selector_ui = 'fzf'
 let g:OmniSharp_start_server = 1
-let g:OmniSharp_selector_findusages = 'fzf'
+" let g:OmniSharp_selector_findusages = 'fzf'
 let g:OmniSharp_popup = 1
 " Update semantic highlighting after all text changes
 let g:OmniSharp_highlight_types = 3
@@ -989,3 +996,6 @@ function! OpenUnityLog()
 endfunction
 command  OpenUlog call OpenUnityLog()
 
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" rainbow bracket
+au FileType c,cpp,objc,objcpp,cs call rainbow#load()

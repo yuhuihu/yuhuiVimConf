@@ -18,6 +18,19 @@
             "{",
             "}"
         ]
+    },
+    "for summary":{
+        "prefix": "/sum",
+        "body": [
+            "///<summary>$TM_SELECTED_TEXT</summary>"
+        ]
+    },
+    "color log for unity":{
+        "prefix":"color",
+        "body":[
+            "<color=white>$TM_SELECTED_TEXT</color>"
+        ]
     }
+
 }
 
