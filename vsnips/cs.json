@@ -11,10 +11,18 @@
         "prefix": ["string"],
         "body":"string.IsNullOrEmpty(${1:$TM_SELECTED_TEXT})"
     },
-    "for int":{
-        "prefix": "for",
+    "for int 1":{
+        "prefix": "for ti",
         "body": [
             "for(int ti = 0; ti < ${1}; ti ++ )",
+            "{",
+            "}"
+        ]
+    },
+    "for int 2":{
+        "prefix": "for tj",
+        "body": [
+            "for(int tj = 0; tj < ${1}; tj ++ )",
             "{",
             "}"
         ]

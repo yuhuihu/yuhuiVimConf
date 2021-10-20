@@ -3,7 +3,6 @@ set nocompatible
 " - For Neovim: ~/.local/share/nvim/plugged
 " - Avoid using standard Vim directory names like 'plugin'
 call plug#begin('~/.local/share/nvim/plugged')
-
 Plug 'https://github.com/scrooloose/nerdtree.git'
 " Plug 'https://github.com/majutsushi/tagbar.git'
 Plug 'liuchengxu/vista.vim'
@@ -66,6 +65,9 @@ Plug 'mhartington/oceanic-next'
 " with tree-sitter
 Plug 'marko-cerovac/material.nvim'
 Plug 'bluz71/vim-nightfly-guicolors'
+
+""" mark down
+Plug 'davidgranstrom/nvim-markdown-preview'
 
 
 call plug#end()
@@ -659,6 +661,27 @@ highlight mhl1 ctermfg=red guifg=red ctermbg=gray
 highlight mhl2 ctermfg=green guifg=green ctermbg=gray
 highlight mhl3 ctermfg=blue guifg=blue ctermbg=gray
 highlight CocErrorSign ctermbg=red ctermfg=white guifg=blue 
+let _multiHiNames = ["mhl1", "mhl2", "mhl3"]
+let _multiHiKws = {}
+function! ExtralHilight(kw)
+    if has_key(g:_multiHiKws, a:kw)
+        let hmark = g:_multiHiKws[a:kw]
+        call matchdelete(hmark)
+        call remove(g:_multiHiKws, a:kw)
+        echo "remove hilight [" . a:kw . "] remain " . len(g:_multiHiKws)
+    else
+        let hidx = len(g:_multiHiKws)
+        if hidx >= len(g:_multiHiNames)
+            let hidx = len(g:_multiHiNames) - 1
+        endif
+        let hname = g:_multiHiNames[hidx]
+        let m = matchadd(hname, a:kw)
+        let g:_multiHiKws[a:kw] = m
+        echo "add hilight [" . a:kw . "] " . len(g:_multiHiKws)
+    endif
+endfunction
+nmap <leader>h :call ExtralHilight(expand("<cword>"))<CR>
+vmap <leader>h "xy:call ExtralHilight(@x)<CR>
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "" terminal
