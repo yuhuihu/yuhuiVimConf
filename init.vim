@@ -32,7 +32,7 @@ Plug 'puremourning/vimspector'
 Plug 'hrsh7th/vim-vsnip'
 Plug 'hrsh7th/vim-vsnip-integ'
 
-Plug 'vim-airline/vim-airline'
+" Plug 'vim-airline/vim-airline'
 " Plug 'vim-airline/vim-airline-themes'
 Plug 'https://github.com/Yggdroot/indentLine'
 " Plug 'git@github.com:kyazdani42/nvim-tree.lua.git'   " 0.5
@@ -178,9 +178,7 @@ nmap <F3> :call LoadSession(0)<CR>
 "}}}
 let g_my_python_debug = ''
 function! DebugPython()
-    if len(g:g_my_python_debug) < 1
-        let g:g_my_python_debug = input('python3 debug:', expand('%'), 'file')
-    endif
+    let g:g_my_python_debug = input('python3 debug:', expand('%'), 'file')
     sp
     let cmd = "terminal ipdb3 -c 'b " . expand('%') . ":" . line('.') . "' -c continue " . g:g_my_python_debug
     echo 'cmd:' cmd
@@ -568,8 +566,8 @@ if  exists('g:gui_oni')
     set laststatus=2
     set statusline=%=%{"|"}%f\ %ybuf:%n%h%m%r%=%{tagbar#currenttag('【%s】','','f')}%=\ %r%P%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\ \"}
 else
-    let g:airline#extensions#coc#enabled = 1
-    let g:airline#extensions#ale#enabled = 1
+    " let g:airline#extensions#coc#enabled = 1
+    " let g:airline#extensions#ale#enabled = 1
     set laststatus=2
     set statusline=\|%-10f\ %y%=buf:%n%h%m%r
     set statusline+=%<%{FugitiveHead()}
@@ -652,7 +650,7 @@ nmap <silent> <leader>cs :SCROLL<CR>
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " airline
-AirlineTheme oceanicnextlight
+" AirlineTheme oceanicnextlight
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " higroup
@@ -765,8 +763,8 @@ let g:ale_linters = { 'cs': ['OmniSharp'] }
 
 " devicons
 let g:webdevicons_enable_nerdtree = 1
-let g:webdevicons_enable_airline_tabline = 0
-let g:webdevicons_enable_airline_statusline = 0
+" let g:webdevicons_enable_airline_tabline = 0
+" let g:webdevicons_enable_airline_statusline = 0
 let g:webdevicons_enable_ctrlp = 0
 
 """"""""""""""""""""
