@@ -272,7 +272,7 @@ map  tu  zz:e!<CR>
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " find word in directories."{{{
-let g:ackprg = 'ag -w --nogroup --nocolor --column'
+let g:ackprg = 'ag --nogroup --nocolor --column'
 let g_my_search_replace_all = 0
 let g_my_search_keyword = ''
 function! SearchWordGlobal(keyword)
@@ -289,9 +289,13 @@ function! SearchWordGlobal(keyword)
             let kw = strpart(kw, 0, tidx) . '\' . strpart(kw, tidx, len(kw))
         endif
     endfor
-    let g:ackprg = 'ag -w --nogroup --nocolor --column --' . expand("%:e")
-    " echo "CAg " . kw . ' ./**/*.' . expand("%:e")
-    exe "Ack '" . kw . "'"
+    let extname = input("find with extension:", expand("%:e"))
+    let g:ackprg = 'ag --nogroup --nocolor --column --' .  extname
+    let cmdstr = "Ack " . kw . ""
+    if isdirectory('Assets')
+        let cmdstr = cmdstr . " ./Assets"
+    endif
+    exe cmdstr
     let g:g_my_search_keyword = kw
     " let wid = win_getid()
     " win_gotoid(wid)
@@ -804,7 +808,7 @@ xmap        S   <Plug>(vsnip-cut-text)
 " colorizer.lua
 lua require'colorizer'.setup()
 """"""""""""""""""""
-" vim inspector
+" vimspector
 " let g:vimspector_enable_mappings = 'HUMAN'
 nmap <leader>vl :call vimspector#Launch()<CR>
 nmap <leader>vr :VimspectorReset<CR>
@@ -1020,3 +1024,9 @@ command  OpenUlog call OpenUnityLog()
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " rainbow bracket
 au FileType c,cpp,objc,objcpp,cs call rainbow#load()
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" git
+map <leader>gu :G pull<CR>
+map <leader>gp :G push<CR>
+
+
