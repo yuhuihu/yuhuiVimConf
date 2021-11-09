@@ -289,8 +289,13 @@ function! SearchWordGlobal(keyword)
             let kw = strpart(kw, 0, tidx) . '\' . strpart(kw, tidx, len(kw))
         endif
     endfor
-    let extname = input("find with extension:", expand("%:e"))
-    let g:ackprg = 'ag --nogroup --nocolor --column --' .  extname
+    let hint = "find [" . kw . "] by extension:"
+    let extname = input(hint, expand("%:e"))
+    if len(extname) == 0 || extname == "*" 
+        let g:ackprg = 'ag -a --nogroup --nocolor --column '
+    else
+        let g:ackprg = 'ag --nogroup --nocolor --column --' .  extname
+    endif
     let cmdstr = "Ack " . kw . ""
     if isdirectory('Assets')
         let cmdstr = cmdstr . " ./Assets"
