@@ -4,28 +4,45 @@ set nocompatible
 " - Avoid using standard Vim directory names like 'plugin'
 call plug#begin('~/.local/share/nvim/plugged')
 Plug 'https://github.com/scrooloose/nerdtree.git'
-" Plug 'https://github.com/majutsushi/tagbar.git'
+Plug 'https://github.com/majutsushi/tagbar.git'
 Plug 'liuchengxu/vista.vim'
 
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
-Plug 'pappasam/coc-jedi', { 'do': 'yarn install --frozen-lockfile && yarn build' }
+" Plug 'neoclide/coc.nvim', {'branch': 'release'}
+" Plug 'pappasam/coc-jedi', { 'do': 'yarn install --frozen-lockfile && yarn build' }
 
 Plug 'https://github.com/vim-scripts/ScrollColors.git'
 Plug 'https://github.com/tpope/vim-fugitive.git'
+Plug 'mhartington/formatter.nvim'
+Plug 'williamboman/nvim-lsp-installer'
+Plug 'neovim/nvim-lspconfig'
+Plug 'hrsh7th/cmp-nvim-lsp'
+Plug 'hrsh7th/cmp-buffer'
+Plug 'hrsh7th/cmp-path'
+Plug 'hrsh7th/cmp-cmdline'
+Plug 'hrsh7th/nvim-cmp'
+
+" Plug 'ms-jpq/coq.thirdparty', {'branch': '3p'}
+" - shell repl
+" - nvim lua api
+" - scientific calculator
+" - comment banner
+" - etc
 
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
 Plug 'git@github.com:Mizux/vim-colorschemes.git'
+Plug 'romgrk/nvim-treesitter-context'
+
 
 " Plug 'lukas-reineke/indent-blankline.nvim', {branch = 'lua'}
 Plug 'sheerun/vim-polyglot'
 
-Plug 'OmniSharp/omnisharp-vim'
-Plug 'git@github.com:dense-analysis/ale.git'
+" Plug 'OmniSharp/omnisharp-vim'
+" Plug 'git@github.com:dense-analysis/ale.git'
 
 Plug 'kkoomen/vim-doge', { 'do': { -> doge#install() } }
 
 Plug 'Eric-Song-Nop/vim-glslx'
-Plug 'puremourning/vimspector'
+" Plug 'puremourning/vimspector'
 
 
 " Track the engine.
@@ -69,6 +86,10 @@ Plug 'bluz71/vim-nightfly-guicolors'
 """ mark down
 Plug 'davidgranstrom/nvim-markdown-preview'
 
+"""" neovim lua plugin
+Plug 'mjlbach/neovim-ui'
+Plug 'sindrets/diffview.nvim'
+Plug 'TimUntersberger/neogit'
 
 call plug#end()
 
@@ -122,13 +143,17 @@ set nowrap
 set expandtab
 
 
+set background=light
 " let ayucolor="light"  " for light version of theme
-" let ayucolor="mirage" " for mirage version of theme
+let ayucolor="mirage" " for mirage version of theme
 " let ayucolor="dark"   " for dark version of theme
 " colo ayu
-colo pencil
+" colo xcodewwdc
+" colo pencil
+" colo lucario
+" colo slate
 
-" colo xcodelighthc
+colo xcodedarkhc
 " colo flattened_light
 " colo challenger_deep
 " There are 5 different styles of material available:
@@ -139,9 +164,8 @@ colo pencil
 " palenight
 " deep ocean
 """"" Set the desired style using:
-let g:material_style = 'oceanic'
+let g:material_style = 'lighter'
 
-set background=light
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "file encoding
@@ -161,7 +185,8 @@ function! SaveSession()
         echo "save session cancle."
     endif
 endfunction
-set sessionoptions=buffers,curdir,resize,folds,tabpages,slash,resize,winpos,winsize
+" set sessionoptions=buffers,curdir,resize,folds,tabpages,slash,resize,winpos,winsize
+set sessionoptions=curdir,resize,folds,tabpages,slash,resize,winpos,winsize,terminal
 nmap <F2> :call SaveSession()<CR>
 function! LoadSession(confirmed)
     let aconf = a:confirmed
@@ -176,21 +201,31 @@ function! LoadSession(confirmed)
 endfunction
 nmap <F3> :call LoadSession(0)<CR>
 "}}}
-let g_my_python_debug = ''
+let g_my_python_debug = {}
 function! DebugPython()
-    let g:g_my_python_debug = input('python3 debug:', expand('%'), 'file')
-    sp
-    let cmd = "terminal ipdb3 -c 'b " . expand('%') . ":" . line('.') . "' -c continue " . g:g_my_python_debug
-    echo 'cmd:' cmd
+    let bname = bufnr()
+    let exname = ''
+    if has_key(g:g_my_python_debug, bname)
+        let exname = g:g_my_python_debug[bname]
+    end
+    let exname = input('python3 debug:', len(exname) > 0 ? exname : expand('%'), 'file')
+    eval("let g:g_my_python_debug." . bname . " = exname")
+    vs
+    let cmd = "terminal ipdb3 -c 'b " . expand('%') . ":" . line('.') . "' -c continue " . exname
+    " echo 'cmd:' cmd
     exe cmd
 endfunction
 
 function! RunPython()
-    if len(g:g_my_python_debug) < 1
-        let g:g_my_python_debug = input('python3 run:', expand('%'), 'file')
-    endif
-    sp
-    exe 'terminal python3 ' . g:g_my_python_debug
+    let bname = bufnr()
+    let exname = ''
+    if has_key(g:g_my_python_debug, bname)
+        let exname = g:g_my_python_debug[bname]
+    end
+    let exname = input('python3 debug:', len(exname) > 0 ? exname : expand('%'), 'file')
+    eval("let g:g_my_python_debug." . bname . " = exname")
+    vs
+    exe 'terminal python3 ' . exname
 endfunction
 
 autocmd FileType python set makeprg=python3\ -c\ \"import\ py_compile,sys;\ sys.stderr=sys.stdout;\ py_compile.compile(r'%')\"
@@ -210,7 +245,7 @@ function! Format_Python()
     endfor
 endfunction
 
-autocmd FileType python nmap <leader>fm :call Format_Python()<CR>
+" autocmd FileType python nmap <leader>fm :call Format_Python()<CR>
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " comment line."
@@ -718,33 +753,33 @@ let g:indent_guides_enable_on_vim_startup = 1
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " " omnisharp
-let g:OmniSharp_server_install='/Users/yuhui/work/tool/omnisharp-osx/'
-let g:OmniSharp_server_path='/Users/yuhui/work/tool/omnisharp-osx/omnisharp/OmniSharp.exe'
-let g:OmniSharp_server_display_loading = 1
-let g:OmniSharp_server_use_mono = 1
-let g:OmniSharp_server_stdio = 1
-let g:OmniSharp_selector_ui = 'fzf'
-let g:OmniSharp_start_server = 1
+" let g:OmniSharp_server_install='/Users/yuhui/work/tool/omnisharp-osx/'
+" let g:OmniSharp_server_path='/Users/yuhui/work/tool/omnisharp-osx/omnisharp/OmniSharp.exe'
+" let g:OmniSharp_server_display_loading = 1
+" let g:OmniSharp_server_use_mono = 1
+" let g:OmniSharp_server_stdio = 1
+" let g:OmniSharp_selector_ui = 'fzf'
+" let g:OmniSharp_start_server = 1
 " let g:OmniSharp_selector_findusages = 'fzf'
-let g:OmniSharp_popup = 1
+" let g:OmniSharp_popup = 1
 " Update semantic highlighting after all text changes
-let g:OmniSharp_highlight_types = 3
+" let g:OmniSharp_highlight_types = 3
 " Update semantic highlighting on BufEnter and InsertLeave
 " let g:OmniSharp_highlight_types = 2
-autocmd CursorHold *.cs OmniSharpTypeLookup
-autocmd FileType cs nmap <silent> <buffer> gd <Plug>(omnisharp_go_to_definition)
-autocmd FileType cs nmap <silent> <buffer> Fu <Plug>(omnisharp_find_usages)
-autocmd FileType cs nmap <silent> <buffer> Ft <Plug>(omnisharp_find_type)
-autocmd FileType cs nmap <silent> <buffer> Fs <Plug>(omnisharp_find_symbol)
-autocmd FileType cs nmap <silent> <buffer> Fa <Plug>(omnisharp_code_actions)
-autocmd FileType cs nmap <silent> <buffer> Fx <Plug>(omnisharp_fix_usings)
-autocmd FileType cs nmap <silent> <buffer> Fk <Plug>(omnisharp_documentation)
-autocmd FileType cs nmap <silent> <buffer> Fm <Plug>(omnisharp_code_format)
-autocmd FileType cs nmap <silent> <buffer> Fr <Plug>(omnisharp_rename)
+" autocmd CursorHold *.cs OmniSharpTypeLookup
+" autocmd FileType cs nmap <silent> <buffer> gd <Plug>(omnisharp_go_to_definition)
+" autocmd FileType cs nmap <silent> <buffer> Fu <Plug>(omnisharp_find_usages)
+" autocmd FileType cs nmap <silent> <buffer> Ft <Plug>(omnisharp_find_type)
+" autocmd FileType cs nmap <silent> <buffer> Fs <Plug>(omnisharp_find_symbol)
+" autocmd FileType cs nmap <silent> <buffer> Fa <Plug>(omnisharp_code_actions)
+" autocmd FileType cs nmap <silent> <buffer> Fx <Plug>(omnisharp_fix_usings)
+" autocmd FileType cs nmap <silent> <buffer> Fk <Plug>(omnisharp_documentation)
+" autocmd FileType cs nmap <silent> <buffer> Fm <Plug>(omnisharp_code_format)
+" autocmd FileType cs nmap <silent> <buffer> Fr <Plug>(omnisharp_rename)
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " ALE
 
-let g:ale_linters = { 'cs': ['OmniSharp'] }
+" let g:ale_linters = { 'cs': ['OmniSharp'] }
 
 " call ale#linter#Define('cs', {
 " \   'name': 'omnisharp',
@@ -814,29 +849,30 @@ xmap        S   <Plug>(vsnip-cut-text)
 lua require'colorizer'.setup()
 """"""""""""""""""""
 " vimspector
+" let g:vimspector_base_dir=expand( '$HOME/.config/nvim/vimspector-config' )
 " let g:vimspector_enable_mappings = 'HUMAN'
-nmap <leader>vl :call vimspector#Launch()<CR>
-nmap <leader>vr :VimspectorReset<CR>
-nmap <leader>ve :VimspectorEval
-nmap <leader>vw :VimspectorWatch
-nmap <leader>vo :VimspectorShowOutput
-nmap <leader>vi <Plug>VimspectorBalloonEval
-xmap <leader>vi <Plug>VimspectorBalloonEval
-let g:vimspector_install_gadgets = [ 'debugpy', 'vscode-go', 'CodeLLDB', 'vscode-node-debug2' ]
-"" launch debug
-nmap † <Plug>VimspectorContinue
-"" toggle breakpoint
-nmap ∫ <Plug>VimspectorToggleBreakpoint
-"" step into
-nmap ˆ <Plug>VimspectorStepInto
-"" step out
-nmap ø <Plug>VimspectorStepOut
-"" step over
-nmap ˜ <Plug>VimspectorStepOver
-"" up frame  | Move up a frame in the current call stack                 | 'vimspector#UpFrame()'                                            |
-nmap ˚ <Plug>VimspectorUpFrame
-"" down frame | Move down a frame in the current call stack               | 'vimspector#DownFrame()'                                          |" down frame
-nmap ∆ <Plug>VimspectorDownFrame
+" nmap <leader>vl :call vimspector#Launch()<CR>
+" nmap <leader>vr :VimspectorReset<CR>
+" nmap <leader>ve :VimspectorEval
+" nmap <leader>vw :VimspectorWatch
+" nmap <leader>vo :VimspectorShowOutput
+" nmap <leader>vi <Plug>VimspectorBalloonEval
+" xmap <leader>vi <Plug>VimspectorBalloonEval
+" let g:vimspector_install_gadgets = [ 'debugpy', 'vscode-go', 'CodeLLDB', 'vscode-node-debug2' ]
+"" launch debug  alt+t
+" nmap † <Plug>VimspectorContinue
+"" toggle breakpoint  alt+b
+" nmap ∫ <Plug>VimspectorToggleBreakpoint
+"" step into  alt+i
+" nmap ˆ <Plug>VimspectorStepInto
+"" step out alt+o
+" nmap ø <Plug>VimspectorStepOut
+"" step over alt+n
+" nmap ˜ <Plug>VimspectorStepOver
+"" up frame  | Move up a frame in the current call stack      alt+k           | 'vimspector#UpFrame()'                                            |
+" nmap ˚ <Plug>VimspectorUpFrame
+"" down frame | Move down a frame in the current call stack    alt+∆           | 'vimspector#DownFrame()'                                          |" down frame
+" nmap ∆ <Plug>VimspectorDownFrame
 
 """"""""""""""""""""
 " clear cocos temp files
@@ -853,146 +889,146 @@ set spelllang=en,cjk
 " COC
 " let g:airline#extensions#coc#enabled = 1
 " if hidden is not set, TextEdit might fail.
-set hidden
-
-let g:coc_global_extensions=['coc-omnisharp']
-
-" Some servers have issues with backup files, see #649
-set nobackup
-set nowritebackup
-
-" Better display for messages
-set cmdheight=2
-
-" You will have bad experience for diagnostic messages when it's default 4000.
-set updatetime=300
-
-" don't give |ins-completion-menu| messages.
-set shortmess+=c
-
-" always show signcolumns
-set signcolumn=yes
-
-" Use tab for trigger completion with characters ahead and navigate.
-" Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
-inoremap <silent><expr> <TAB>
-            \ pumvisible() ? "\<C-n>" :
-            \ <SID>check_back_space() ? "\<TAB>" :
-            \ coc#refresh()
-inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
-
-function! s:check_back_space() abort
-    let col = col('.') - 1
-    return !col || getline('.')[col - 1]  =~# '\s'
-endfunction
-
-" Use <c-space> to trigger completion.
-inoremap <silent><expr> <c-space> coc#refresh()
-
-" Use <cr> to confirm completion, `<C-g>u` means break undo chain at current position.
-" Coc only does snippet and additional edit on confirm.
-inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
-" Or use `complete_info` if your vim support it, like:
-" inoremap <expr> <cr> complete_info()["selected"] != "-1" ? "\<C-y>" : "\<C-g>u\<CR>"
-
-" Use `[g` and `]g` to navigate diagnostics
-nmap <silent> [g <Plug>(coc-diagnostic-prev)
-nmap <silent> ]g <Plug>(coc-diagnostic-next)
-
-" Remap keys for gotos
-nmap <silent> gd <Plug>(coc-definition)
-nmap <silent> gy <Plug>(coc-type-definition)
-nmap <silent> gi <Plug>(coc-implementation)
-nmap <silent> gr <Plug>(coc-references)
-
-" Use K to show documentation in preview window
-nnoremap <silent> K :call <SID>show_documentation()<CR>
-
-function! s:show_documentation()
-    if (index(['vim','help'], &filetype) >= 0)
-        execute 'h '.expand('<cword>')
-    else
-        call CocAction('doHover')
-    endif
-endfunction
-
-" Highlight symbol under cursor on CursorHold
-autocmd CursorHold * silent call CocActionAsync('highlight')
-
-" Remap for rename current word
-nmap Trn <Plug>(coc-rename)
-
-" Remap for format selected region
-" xmap lf  <Plug>(coc-format-selected)
-" nmap lf  <Plug>(coc-format-selected)
-
-augroup mygroup
-    autocmd!
-    " Setup formatexpr specified filetype(s).
-    autocmd FileType python,typescript,json setl formatexpr=CocAction('formatSelected')
-    " Update signature help on jump placeholder
-    autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
-augroup end
-
-" Remap for do codeAction of selected region, ex: `laap` for current paragraph
-xmap ta  <Plug>(coc-codeaction-selected)
-nmap ta  <Plug>(coc-codeaction-selected)
-
-" Remap for do codeAction of current line
-nmap tac  <Plug>(coc-codeaction)
-" Fix autofix problem of current line
-nmap tqf  <Plug>(coc-fix-current)
-
-" Create mappings for function text object, requires document symbols feature of languageserver.
-xmap if <Plug>(coc-funcobj-i)
-xmap af <Plug>(coc-funcobj-a)
-omap if <Plug>(coc-funcobj-i)
-omap af <Plug>(coc-funcobj-a)
-
-" Use <C-d> for select selections ranges, needs server support, like: coc-tsserver, coc-python
-" nmap <silent> <C-d> <Plug>(coc-range-select)
-" xmap <silent> <C-d> <Plug>(coc-range-select)
-
-" Use `:Format` to format current buffer
-command! -nargs=0 Format :call CocAction('format')
-
-" Use `:Fold` to fold current buffer
-" command! -nargs=? Fold :call     CocAction('fold', <f-args>)
-
-" use `:OR` for organize import of current buffer
-command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')
-
-" Add status line support, for integration with other plugin, checkout `:h coc-status`
-set statusline^=%<%{coc#status()}%{get(b:,'coc_current_function','')}%<
-
-" Using CocList
-" Show all diagnostics
-nnoremap <silent> <space>a  :<C-u>CocList diagnostics<cr>
-" Manage extensions
-nnoremap <silent> <space>e  :<C-u>CocList extensions<cr>
-" Show commands
-nnoremap <silent> <space>c  :<C-u>CocList commands<cr>
-" Find symbol of current document
-nnoremap <silent> <space>o  :<C-u>CocList outline<cr>
-" Search workspace symbols
-nnoremap <silent> <space>s  :<C-u>CocList -I symbols<cr>
-" Do default action for next item.
-nnoremap <silent> <space>j  :<C-u>CocNext<CR>
-" Do default action for previous item.
-nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
-" Resume latest coc list
-nnoremap <silent> <space>p  :<C-u>CocListResume<CR>
+"" set hidden
+"" 
+"" let g:coc_global_extensions=['coc-omnisharp']
+"" 
+"" " Some servers have issues with backup files, see #649
+"" set nobackup
+"" set nowritebackup
+"" 
+"" " Better display for messages
+"" set cmdheight=2
+"" 
+"" " You will have bad experience for diagnostic messages when it's default 4000.
+"" set updatetime=300
+"" 
+"" " don't give |ins-completion-menu| messages.
+"" set shortmess+=c
+"" 
+"" " always show signcolumns
+"" set signcolumn=yes
+"" 
+"" " Use tab for trigger completion with characters ahead and navigate.
+"" " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
+"" inoremap <silent><expr> <TAB>
+""             \ pumvisible() ? "\<C-n>" :
+""             \ <SID>check_back_space() ? "\<TAB>" :
+""             \ coc#refresh()
+"" inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+"" 
+"" function! s:check_back_space() abort
+""     let col = col('.') - 1
+""     return !col || getline('.')[col - 1]  =~# '\s'
+"" endfunction
+"" 
+"" " Use <c-space> to trigger completion.
+"" inoremap <silent><expr> <c-space> coc#refresh()
+"" 
+"" " Use <cr> to confirm completion, `<C-g>u` means break undo chain at current position.
+"" " Coc only does snippet and additional edit on confirm.
+"" inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
+"" " Or use `complete_info` if your vim support it, like:
+"" " inoremap <expr> <cr> complete_info()["selected"] != "-1" ? "\<C-y>" : "\<C-g>u\<CR>"
+"" 
+"" " Use `[g` and `]g` to navigate diagnostics
+"" nmap <silent> [g <Plug>(coc-diagnostic-prev)
+"" nmap <silent> ]g <Plug>(coc-diagnostic-next)
+"" 
+"" " Remap keys for gotos
+"" nmap <silent> gd <Plug>(coc-definition)
+"" nmap <silent> gy <Plug>(coc-type-definition)
+"" nmap <silent> gi <Plug>(coc-implementation)
+"" nmap <silent> gr <Plug>(coc-references)
+"" 
+"" " Use K to show documentation in preview window
+"" nnoremap <silent> K :call <SID>show_documentation()<CR>
+"" 
+"" function! s:show_documentation()
+""     if (index(['vim','help'], &filetype) >= 0)
+""         execute 'h '.expand('<cword>')
+""     else
+""         call CocAction('doHover')
+""     endif
+"" endfunction
+"" 
+"" " Highlight symbol under cursor on CursorHold
+"" autocmd CursorHold * silent call CocActionAsync('highlight')
+"" 
+"" " Remap for rename current word
+"" nmap Trn <Plug>(coc-rename)
+"" 
+"" " Remap for format selected region
+"" " xmap lf  <Plug>(coc-format-selected)
+"" " nmap lf  <Plug>(coc-format-selected)
+"" 
+"" augroup mygroup
+""     autocmd!
+""     " Setup formatexpr specified filetype(s).
+""     autocmd FileType python,typescript,json setl formatexpr=CocAction('formatSelected')
+""     " Update signature help on jump placeholder
+""     autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+"" augroup end
+"" 
+"" " Remap for do codeAction of selected region, ex: `laap` for current paragraph
+"" xmap ta  <Plug>(coc-codeaction-selected)
+"" nmap ta  <Plug>(coc-codeaction-selected)
+"" 
+"" " Remap for do codeAction of current line
+"" nmap tac  <Plug>(coc-codeaction)
+"" " Fix autofix problem of current line
+"" nmap tqf  <Plug>(coc-fix-current)
+"" 
+"" " Create mappings for function text object, requires document symbols feature of languageserver.
+"" xmap if <Plug>(coc-funcobj-i)
+"" xmap af <Plug>(coc-funcobj-a)
+"" omap if <Plug>(coc-funcobj-i)
+"" omap af <Plug>(coc-funcobj-a)
+"" 
+"" " Use <C-d> for select selections ranges, needs server support, like: coc-tsserver, coc-python
+"" " nmap <silent> <C-d> <Plug>(coc-range-select)
+"" " xmap <silent> <C-d> <Plug>(coc-range-select)
+"" 
+"" " Use `:Format` to format current buffer
+"" command! -nargs=0 Format :call CocAction('format')
+"" 
+"" " Use `:Fold` to fold current buffer
+"" " command! -nargs=? Fold :call     CocAction('fold', <f-args>)
+"" 
+"" " use `:OR` for organize import of current buffer
+"" command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')
+"" 
+"" " Add status line support, for integration with other plugin, checkout `:h coc-status`
+"" set statusline^=%<%{coc#status()}%{get(b:,'coc_current_function','')}%<
+"" 
+"" " Using CocList
+"" " Show all diagnostics
+"" nnoremap <silent> <space>a  :<C-u>CocList diagnostics<cr>
+"" " Manage extensions
+"" nnoremap <silent> <space>e  :<C-u>CocList extensions<cr>
+"" " Show commands
+"" nnoremap <silent> <space>c  :<C-u>CocList commands<cr>
+"" " Find symbol of current document
+"" nnoremap <silent> <space>o  :<C-u>CocList outline<cr>
+"" " Search workspace symbols
+"" nnoremap <silent> <space>s  :<C-u>CocList -I symbols<cr>
+"" " Do default action for next item.
+"" nnoremap <silent> <space>j  :<C-u>CocNext<CR>
+"" " Do default action for previous item.
+"" nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
+"" " Resume latest coc list
+"" nnoremap <silent> <space>p  :<C-u>CocListResume<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-inoremap <silent><expr> <TAB>
-            \ pumvisible() ? coc#_select_confirm() :
-            \ coc#expandableOrJumpable() ? "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" :
-            \ <SID>check_back_space() ? "\<TAB>" :
-            \ coc#refresh()
+" inoremap <silent><expr> <TAB>
+            " \ pumvisible() ? coc#_select_confirm() :
+            " \ coc#expandableOrJumpable() ? "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" :
+            " \ <SID>check_back_space() ? "\<TAB>" :
+            " \ coc#refresh()
 
-function! s:check_back_space() abort
-    let col = col('.') - 1
-    return !col || getline('.')[col - 1]  =~# '\s'
-endfunction
+" function! s:check_back_space() abort
+    " let col = col('.') - 1
+    " return !col || getline('.')[col - 1]  =~# '\s'
+" endfunction
 
 
 function! SetupReHost()
@@ -1000,6 +1036,30 @@ function! SetupReHost()
         echomsg 'nvim 服务器名称写出失败'
     endif
 endfunction
+command SetUnitEditor call SetupReHost()
+
+function! OpenAndroidLog() 
+    exec "vert new"
+    exec "terminal adb logcat '*:S' Unity -v color>~/Downloads/adblog.txt"
+    exec 'read ~/Downloads/adblog.txt'
+    " setlocal buftype=nowrite
+    " setlocal noswapfile
+    " let cmds = [
+                " \':g/^\s*/d',
+                " \]
+    " echo cmds
+    " for tc in cmds
+        " try
+            " echo "regx:" . tc
+            " exe tc
+        " catch E486
+            " echo "no need fix"
+        " endtry
+    " endfor
+
+endfunction
+command  OpenAlog call OpenAndroidLog()
+
 
 function! OpenUnityLog() 
     exec "vert new"
@@ -1034,4 +1094,156 @@ au FileType c,cpp,objc,objcpp,cs call rainbow#load()
 map <leader>gu :G pull<CR>
 map <leader>gp :G push<CR>
 
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" plush by text
+function! PlusTxt(pat, value)
+    let cline = getline('.')
+    let newline = substitute(cline, a:pat, (split(cline[:-2], ' ')[2] + a:value) . ',', '')
+    call setline('.',  newline)
+endfunction
 
+command PlusTxt call PlusTxt('\d\+', 10)
+set completeopt=menu,menuone,noselect
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" nvim lsp
+" some shortcuts
+nnoremap <silent> gd    <cmd>lua vim.lsp.buf.declaration()<CR>
+nnoremap <silent> <c-]> <cmd>lua vim.lsp.buf.definition()<CR>
+nnoremap <silent> K     <cmd>lua vim.lsp.buf.hover()<CR>
+nnoremap <silent> gD    <cmd>lua vim.lsp.buf.implementation()<CR>
+nnoremap <silent> <c-k> <cmd>lua vim.lsp.buf.signature_help()<CR>
+nnoremap <silent> 1gD   <cmd>lua vim.lsp.buf.type_definition()<CR>
+nnoremap <silent> gr    <cmd>lua vim.lsp.buf.references()<CR>
+nnoremap <silent> g0    <cmd>lua vim.lsp.buf.document_symbol()<CR>
+nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" python 
+
+" use omni completion provided by lsp
+autocmd Filetype python setlocal omnifunc=v:lua.vim.lsp.omnifunc
+
+lua <<EOF
+  -- Setup nvim-cmp.
+  local cmp = require'cmp'
+
+  cmp.setup({
+    snippet = {
+      -- REQUIRED - you must specify a snippet engine
+      expand = function(args)
+        vim.fn["vsnip#anonymous"](args.body) -- For `vsnip` users.
+        -- require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
+        -- require('snippy').expand_snippet(args.body) -- For `snippy` users.
+        -- vim.fn["UltiSnips#Anon"](args.body) -- For `ultisnips` users.
+      end,
+    },
+    mapping = {
+      ['<C-j>'] = cmp.mapping(cmp.mapping.scroll_docs(-4), { 'i', 'c' }),
+      ['<C-k>'] = cmp.mapping(cmp.mapping.scroll_docs(4), { 'i', 'c' }),
+      ['<C-Space>'] = cmp.mapping(cmp.mapping.complete(), { 'i', 'c' }),
+      -- ['<C-y>'] = cmp.config.disable, -- Specify `cmp.config.disable` if you want to remove the default `<C-y>` mapping.
+      ['<C-e>'] = cmp.mapping({
+        i = cmp.mapping.abort(),
+        c = cmp.mapping.close(),
+      }),
+      ['<CR>'] = cmp.mapping.confirm({ select = true }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+    },
+    sources = cmp.config.sources({
+      { name = 'nvim_lsp' },
+      { name = 'vsnip' }, -- For vsnip users.
+      -- { name = 'luasnip' }, -- For luasnip users.
+      -- { name = 'ultisnips' }, -- For ultisnips users.
+      -- { name = 'snippy' }, -- For snippy users.
+    }, {
+      { name = 'buffer' },
+    })
+  })
+
+  -- Use buffer source for `/` (if you enabled `native_menu`, this won't work anymore).
+  cmp.setup.cmdline('/', {
+    sources = {
+      { name = 'buffer' }
+    }
+  })
+
+  -- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
+  cmp.setup.cmdline(':', {
+    sources = cmp.config.sources({
+      { name = 'path' }
+    }, {
+      { name = 'cmdline' }
+    })
+  })
+
+  -- Setup lspconfig.
+  local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+  -- Replace <YOUR_LSP_SERVER> with each lsp server you've enabled.
+  require('lspconfig')['pylsp'].setup {
+      filetypes = {"python"},
+      settings = {
+         formatCommand = {"black"}
+         -- pyls = { 
+           --   plugins = { 
+             --     pycodestyle =  { enabled = false }, 
+               --   pylint =  { enabled = false }
+                 -- }
+             -- }
+          }
+  }
+  require('lspconfig')['sumneko_lua'].setup {
+    settings = {
+        Lua = {
+          runtime = {
+            -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
+            version = 'LuaJIT',
+            -- Setup your lua path
+            path = 'lua-language-server',
+          },
+          diagnostics = {
+            -- Get the language server to recognize the `vim` global
+            globals = {'vim'},
+          },
+          workspace = {
+            -- Make the server aware of Neovim runtime files
+            library = vim.api.nvim_get_runtime_file("", true),
+          },
+          -- Do not send telemetry data containing a randomized but unique identifier
+          telemetry = {
+            enable = false,
+          },
+        },
+      }
+  }
+  require('lspconfig')['vimls'].setup { }
+EOF
+""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" formatter
+lua <<EOF
+require('formatter').setup({
+ filetype = {
+    python = {
+      -- prettier
+      function()
+        return {
+          exe = "black",
+          args = {'-' },
+          stdin = true
+        }
+      end
+    },
+    lua = {
+      function()
+        return {
+          exe = "stylua",
+          args = {
+            "-",
+          },
+          stdin = true,
+        }
+      end,
+    },
+  }
+})
+EOF
+nnoremap <silent> Fm :Format<CR>
