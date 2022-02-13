@@ -143,7 +143,7 @@ set nowrap
 set expandtab
 
 
-set background=light
+set background=dark
 " let ayucolor="light"  " for light version of theme
 let ayucolor="mirage" " for mirage version of theme
 " let ayucolor="dark"   " for dark version of theme
@@ -153,11 +153,11 @@ let ayucolor="mirage" " for mirage version of theme
 " colo lucario
 " colo slate
 
-colo xcodedarkhc
+" colo xcodedark
 " colo flattened_light
 " colo challenger_deep
 " There are 5 different styles of material available:
-" colo material
+colo material
 " darker
 " lighter
 " oceanic
@@ -209,9 +209,10 @@ function! DebugPython()
         let exname = g:g_my_python_debug[bname]
     end
     let exname = input('python3 debug:', len(exname) > 0 ? exname : expand('%'), 'file')
-    eval("let g:g_my_python_debug." . bname . " = exname")
+    let g:g_my_python_debug[bname]=exname
+    " eval("let g:g_my_python_debug." . bname . " = exname")
     vs
-    let cmd = "terminal ipdb3 -c 'b " . expand('%') . ":" . line('.') . "' -c continue " . exname
+    let cmd = "terminal pdbr -c 'b " . expand('%') . ":" . line('.') . "' -c continue " . exname
     " echo 'cmd:' cmd
     exe cmd
 endfunction
@@ -222,8 +223,9 @@ function! RunPython()
     if has_key(g:g_my_python_debug, bname)
         let exname = g:g_my_python_debug[bname]
     end
-    let exname = input('python3 debug:', len(exname) > 0 ? exname : expand('%'), 'file')
-    eval("let g:g_my_python_debug." . bname . " = exname")
+    let exname = input('python3 run:', len(exname) > 0 ? exname : expand('%'), 'file')
+    let g:g_my_python_debug[bname]=exname
+    " eval("let g:g_my_python_debug." . bname . " = exname")
     vs
     exe 'terminal python3 ' . exname
 endfunction
@@ -331,7 +333,7 @@ function! SearchWordGlobal(keyword)
     else
         let g:ackprg = 'ag --nogroup --nocolor --column --' .  extname
     endif
-    let cmdstr = "Ack " . kw . ""
+    let cmdstr = "Ack '" . kw . "'"
     if isdirectory('Assets')
         let cmdstr = cmdstr . " ./Assets"
     endif
@@ -629,6 +631,44 @@ nnoremap <silent> Tn :let curPath =expand("%:h:p")<Bar> exec "NERDTree " . (len(
 "}}}
 
 """"""""""""""""""""""""""""""""""""""""""" Vista"{{{
+" How each level is indented and what to prepend.
+" This could make the display more compact or more spacious.
+" e.g., more compact: ["▸ ", ""]
+" Note: this option only works for the kind renderer, not the tree renderer.
+let g:vista_icon_indent = ["╰─▸ ", "├─▸ "]
+
+" Executive used when opening vista sidebar without specifying it.
+" See all the avaliable executives via `:echo g:vista#executives`.
+let g:vista_default_executive = 'ctags'
+
+" Set the executive for some filetypes explicitly. Use the explicit executive
+" instead of the default one for these filetypes when using `:Vista` without
+" specifying the executive.
+let g:vista_executive_for = {
+  \ 'cpp': 'vim_lsp',
+  \ 'php': 'vim_lsp',
+  \ 'python': 'vim_lsp',
+  \ }
+
+" Declare the command including the executable and options used to generate ctags output
+" for some certain filetypes.The file path will be appened to your custom command.
+" For example:
+let g:vista_ctags_cmd = {
+      \ 'haskell': 'hasktags -x -o - -c',
+      \ }
+
+" To enable fzf's preview window set g:vista_fzf_preview.
+" The elements of g:vista_fzf_preview will be passed as arguments to fzf#vim#with_preview()
+" For example:
+let g:vista_fzf_preview = ['right:50%']
+" Ensure you have installed some decent font to show these pretty symbols, then you can enable icon for the kind.
+let g:vista#renderer#enable_icon = 1
+
+" The default icons can't be suitable for all the filetypes, you can extend it as you wish.
+let g:vista#renderer#icons = {
+\   "function": "\uf794",
+\   "variable": "\uf71b",
+\  }
 nnoremap <silent> Tv :Vista!! <CR>
 "}}}
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -1138,8 +1178,8 @@ lua <<EOF
       end,
     },
     mapping = {
-      ['<C-j>'] = cmp.mapping(cmp.mapping.scroll_docs(-4), { 'i', 'c' }),
-      ['<C-k>'] = cmp.mapping(cmp.mapping.scroll_docs(4), { 'i', 'c' }),
+      ['<C-l>'] = cmp.mapping(cmp.mapping.scroll_docs(-4), { 'i', 'c' }),
+      ['<C-h>'] = cmp.mapping(cmp.mapping.scroll_docs(4), { 'i', 'c' }),
       ['<C-Space>'] = cmp.mapping(cmp.mapping.complete(), { 'i', 'c' }),
       -- ['<C-y>'] = cmp.config.disable, -- Specify `cmp.config.disable` if you want to remove the default `<C-y>` mapping.
       ['<C-e>'] = cmp.mapping({
