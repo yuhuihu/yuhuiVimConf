@@ -36,8 +36,8 @@ Plug 'romgrk/nvim-treesitter-context'
 " Plug 'lukas-reineke/indent-blankline.nvim', {branch = 'lua'}
 Plug 'sheerun/vim-polyglot'
 
-" Plug 'OmniSharp/omnisharp-vim'
-" Plug 'git@github.com:dense-analysis/ale.git'
+Plug 'OmniSharp/omnisharp-vim'
+Plug 'git@github.com:dense-analysis/ale.git'
 
 Plug 'kkoomen/vim-doge', { 'do': { -> doge#install() } }
 
@@ -769,6 +769,9 @@ vmap <leader>h "xy:call ExtralHilight(@x)<CR>
 "" terminal
 function! OpenTerminalSplit(cmd)
     exe a:cmd
+    " if isdirectory("./venv")
+        " exe ":terminal source ./venv/bin/activate"
+    " else
     exe ":terminal"
     setlocal nowrap
 endfunction
@@ -802,9 +805,9 @@ let g:indent_guides_enable_on_vim_startup = 1
 " let g:OmniSharp_start_server = 1
 " let g:OmniSharp_selector_findusages = 'fzf'
 " let g:OmniSharp_popup = 1
-" Update semantic highlighting after all text changes
+" " Update semantic highlighting after all text changes
 " let g:OmniSharp_highlight_types = 3
-" Update semantic highlighting on BufEnter and InsertLeave
+" " Update semantic highlighting on BufEnter and InsertLeave
 " let g:OmniSharp_highlight_types = 2
 " autocmd CursorHold *.cs OmniSharpTypeLookup
 " autocmd FileType cs nmap <silent> <buffer> gd <Plug>(omnisharp_go_to_definition)
@@ -819,7 +822,7 @@ let g:indent_guides_enable_on_vim_startup = 1
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " ALE
 
-" let g:ale_linters = { 'cs': ['OmniSharp'] }
+let g:ale_linters = { 'cs': ['OmniSharp'] }
 
 " call ale#linter#Define('cs', {
 " \   'name': 'omnisharp',
@@ -1157,6 +1160,7 @@ nnoremap <silent> 1gD   <cmd>lua vim.lsp.buf.type_definition()<CR>
 nnoremap <silent> gr    <cmd>lua vim.lsp.buf.references()<CR>
 nnoremap <silent> g0    <cmd>lua vim.lsp.buf.document_symbol()<CR>
 nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
+" nnoremap <silent> <space>a    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " python 
 
@@ -1255,6 +1259,14 @@ lua <<EOF
       }
   }
   require('lspconfig')['vimls'].setup { }
+  -- omnisharp lsp config
+  require'lspconfig'.omnisharp.setup {
+      capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities()),
+      on_attach = function(_, bufnr)
+      vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+  end,
+  cmd = { "/Users/yuhui/work/tool/omnisharp-osx/run", "--languageserver" , "--hostPID", tostring(pid) },
+  }
 EOF
 """"""""""""""""""""
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
