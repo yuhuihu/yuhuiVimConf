@@ -30,19 +30,19 @@ Plug 'hrsh7th/nvim-cmp'
 
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
 Plug 'git@github.com:Mizux/vim-colorschemes.git'
-Plug 'romgrk/nvim-treesitter-context'
+" Plug 'romgrk/nvim-treesitter-context'
 
 
-" Plug 'lukas-reineke/indent-blankline.nvim', {branch = 'lua'}
+Plug 'lukas-reineke/indent-blankline.nvim'
 Plug 'sheerun/vim-polyglot'
 
 Plug 'OmniSharp/omnisharp-vim'
-Plug 'git@github.com:dense-analysis/ale.git'
+" Plug 'git@github.com:dense-analysis/ale.git'
 
 Plug 'kkoomen/vim-doge', { 'do': { -> doge#install() } }
 
 Plug 'Eric-Song-Nop/vim-glslx'
-" Plug 'puremourning/vimspector'
+Plug 'puremourning/vimspector'
 
 
 " Track the engine.
@@ -51,7 +51,6 @@ Plug 'hrsh7th/vim-vsnip-integ'
 
 " Plug 'vim-airline/vim-airline'
 " Plug 'vim-airline/vim-airline-themes'
-Plug 'https://github.com/Yggdroot/indentLine'
 " Plug 'git@github.com:kyazdani42/nvim-tree.lua.git'   " 0.5
 " Plug 'git@github.com:lukas-reineke/indent-blankline.nvim.git'   " 0.5
 " Plug 'https://github.com/adelarsq/neoline.vim'   " 0.5
@@ -78,6 +77,8 @@ Plug 'https://github.com/lifepillar/vim-wwdc17-theme.git'
 Plug 'https://github.com/arzg/vim-colors-xcode.git'
 Plug 'ayu-theme/ayu-vim'
 Plug 'mhartington/oceanic-next'
+Plug 'folke/lsp-colors.nvim'
+
 
 " with tree-sitter
 Plug 'marko-cerovac/material.nvim'
@@ -145,8 +146,8 @@ set expandtab
 
 set background=dark
 " let ayucolor="light"  " for light version of theme
-let ayucolor="mirage" " for mirage version of theme
-" let ayucolor="dark"   " for dark version of theme
+" let ayucolor="mirage" " for mirage version of theme
+let ayucolor="dark"   " for dark version of theme
 " colo ayu
 " colo xcodewwdc
 " colo pencil
@@ -164,7 +165,7 @@ colo material
 " palenight
 " deep ocean
 """"" Set the desired style using:
-let g:material_style = 'lighter'
+let g:material_style = 'oceanic'
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -814,23 +815,23 @@ let g:indent_guides_enable_on_vim_startup = 1
 " autocmd FileType cs nmap <silent> <buffer> Fu <Plug>(omnisharp_find_usages)
 " autocmd FileType cs nmap <silent> <buffer> Ft <Plug>(omnisharp_find_type)
 " autocmd FileType cs nmap <silent> <buffer> Fs <Plug>(omnisharp_find_symbol)
-" autocmd FileType cs nmap <silent> <buffer> Fa <Plug>(omnisharp_code_actions)
-" autocmd FileType cs nmap <silent> <buffer> Fx <Plug>(omnisharp_fix_usings)
+autocmd FileType cs nmap <silent> <buffer> <leader><space> <Plug>(omnisharp_code_actions)
+autocmd FileType cs nmap <silent> <buffer> Fx <Plug>(omnisharp_fix_usings)
 " autocmd FileType cs nmap <silent> <buffer> Fk <Plug>(omnisharp_documentation)
-" autocmd FileType cs nmap <silent> <buffer> Fm <Plug>(omnisharp_code_format)
-" autocmd FileType cs nmap <silent> <buffer> Fr <Plug>(omnisharp_rename)
+autocmd FileType cs nmap <silent> <buffer> Fm :OmniSharpCodeFormat<CR>
+autocmd FileType cs nmap <silent> <buffer> Fr <Plug>(omnisharp_rename)
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " ALE
 
-let g:ale_linters = { 'cs': ['OmniSharp'] }
+" let g:ale_linters = { 'cs': ['OmniSharp'] }
 
 " call ale#linter#Define('cs', {
-" \   'name': 'omnisharp',
-" \   'lsp': 'stdio',
-" \   'executable': '/Users/yuhui/work/tool/omnisharp-osx/run',
-" \   'command': '%e run',
-" \   'project_root': '.',
-" \})
+            " \   'name': 'omnisharp',
+            " \   'lsp': 'stdio',
+            " \   'executable': '/Users/yuhui/work/tool/omnisharp-osx/run',
+            " \   'command': '%e run',
+            " \   'project_root': '.',
+            " \})
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " function! NearestMethodOrFunction() abort
     " return get(b:, 'vista_nearest_method_or_function', '')
@@ -1299,3 +1300,27 @@ require('formatter').setup({
 })
 EOF
 nnoremap <silent> Fm :Format<CR>
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" lsp-colors
+lua <<EOF
+-- Lua
+require("lsp-colors").setup({
+  Error = "#db4b4b",
+  Warning = "#e0af68",
+  Information = "#0db9d7",
+  Hint = "#10B981"
+})
+EOF
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" indent_blankline
+lua <<EOF
+vim.opt.list = true
+-- vim.opt.listchars:append("eol:↴")
+
+require("indent_blankline").setup {
+    show_end_of_line = false,
+    show_current_context = true,
+    show_current_context_start = false,
+}
+EOF
+
