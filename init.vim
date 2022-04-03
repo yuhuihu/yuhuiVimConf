@@ -20,6 +20,8 @@ Plug 'hrsh7th/cmp-buffer'
 Plug 'hrsh7th/cmp-path'
 Plug 'hrsh7th/cmp-cmdline'
 Plug 'hrsh7th/nvim-cmp'
+Plug 'hrsh7th/cmp-vsnip'
+Plug 'tzachar/cmp-tabnine', { 'do': './install.sh' }  " tooooooo slow.
 
 " Plug 'ms-jpq/coq.thirdparty', {'branch': '3p'}
 " - shell repl
@@ -89,8 +91,9 @@ Plug 'davidgranstrom/nvim-markdown-preview'
 
 """" neovim lua plugin
 Plug 'mjlbach/neovim-ui'
+Plug 'nvim-lua/plenary.nvim'
 Plug 'sindrets/diffview.nvim'
-Plug 'TimUntersberger/neogit'
+" Plug 'TimUntersberger/neogit'
 
 call plug#end()
 
@@ -153,12 +156,13 @@ let ayucolor="dark"   " for dark version of theme
 " colo pencil
 " colo lucario
 " colo slate
+colo nightfly
 
 " colo xcodedark
 " colo flattened_light
 " colo challenger_deep
 " There are 5 different styles of material available:
-colo material
+" colo material
 " darker
 " lighter
 " oceanic
@@ -227,7 +231,7 @@ function! RunPython()
     let exname = input('python3 run:', len(exname) > 0 ? exname : expand('%'), 'file')
     let g:g_my_python_debug[bname]=exname
     " eval("let g:g_my_python_debug." . bname . " = exname")
-    vs
+    7sp
     exe 'terminal python3 ' . exname
 endfunction
 
@@ -310,6 +314,19 @@ map  tu  zz:e!<CR>
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " find word in directories."{{{
+"
+function EscapeLitters(win)
+    let kw = a:win
+    let toescaps = [".", "/", "'", "[", "]"]
+    for tk in toescaps
+        let tidx = stridx(kw, tk)
+        if tidx >= 0
+            let kw = strpart(kw, 0, tidx) . '\' . strpart(kw, tidx, len(kw))
+        endif
+    endfor
+    return kw
+endfunction
+
 let g:ackprg = 'ag --nogroup --nocolor --column'
 let g_my_search_replace_all = 0
 let g_my_search_keyword = ''
@@ -320,13 +337,7 @@ function! SearchWordGlobal(keyword)
         let kw = @x
     endif
     """" escap
-    let toescaps = [".", "/", "'", "[", "]"]
-    for tk in toescaps
-        let tidx = stridx(kw, tk)
-        if tidx >= 0
-            let kw = strpart(kw, 0, tidx) . '\' . strpart(kw, tidx, len(kw))
-        endif
-    endfor
+    let kw = EscapeLitters(kw)
     let hint = "find [" . kw . "] by extension:"
     let extname = input(hint, expand("%:e"))
     if len(extname) == 0 || extname == "*" 
@@ -354,7 +365,7 @@ nmap <silent> Tf :call SearchWordGlobal(expand("<cword>"))<CR>
 vmap <silent> Tf :call SearchWordGlobal('')<CR>
 
 function! SearchWordInCurrentFile(kw)
-    let keyword = a:kw
+    let keyword = EscapeLitters(a:kw)
     if len(keyword) < 1
         normal! gv"xy
         let keyword = @x
@@ -617,13 +628,13 @@ else
     " let g:airline#extensions#ale#enabled = 1
     set laststatus=2
     set statusline=\|%-10f\ %y%=buf:%n%h%m%r
-    set statusline+=%<%{FugitiveHead()}
+    set statusline+=\|%<%{FugitiveHead()}\|
     " set statusline+=%<%{'win:' . winnr()}
     " set statusline+=%{SyntasticStatuslineFlag()}
     " let g:airline_section_z = '%l/%L|B%n' 
     " set statusline+=%{StatusDiagnostic()}
-    set statusline+=%{\"[\".(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"]\"}
-    set statusline+=%k\|%(%l/%L%)\|%P
+    set statusline+=%{(&fenc==\"\"?&enc:&fenc).((exists(\"+bomb\")\ &&\ &bomb)?\",B\":\"\").\"\|\"}
+    set statusline+=%k%(%l/%L%)\|%P
 endif
 
 """"""""""""""""""""""""""""""for NERDTree"{{{
@@ -1167,7 +1178,10 @@ nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
 
 " use omni completion provided by lsp
 autocmd Filetype python setlocal omnifunc=v:lua.vim.lsp.omnifunc
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+nnoremap <silent> <leader>fh :DiffviewFileHistory<CR>
 
+set completeopt=menu,menuone,noselect
 lua <<EOF
   -- Setup nvim-cmp.
   local cmp = require'cmp'
@@ -1191,17 +1205,25 @@ lua <<EOF
         i = cmp.mapping.abort(),
         c = cmp.mapping.close(),
       }),
-      ['<CR>'] = cmp.mapping.confirm({ select = true }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+      ['<tab>'] = cmp.mapping.confirm({ select = true }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
     },
-    sources = cmp.config.sources({
-      { name = 'nvim_lsp' },
-      { name = 'vsnip' }, -- For vsnip users.
-      -- { name = 'luasnip' }, -- For luasnip users.
-      -- { name = 'ultisnips' }, -- For ultisnips users.
-      -- { name = 'snippy' }, -- For snippy users.
-    }, {
-      { name = 'buffer' },
-    })
+    sources = cmp.config.sources(
+    {
+        { name = 'nvim_lsp' },
+        { name = 'vsnip' }, -- For vsnip users.
+        -- { name = 'luasnip' }, -- For luasnip users.
+        -- { name = 'ultisnips' }, -- For ultisnips users.
+        -- { name = 'snippy' }, -- For snippy users.
+    },
+    {
+        { name = 'buffer' },
+    }),
+    {
+        {name = 'cmp_tabnine'},
+    },
+    -- completion = {
+        -- autocomplete = true, -- disable auto-completion.
+    -- },
   })
 
   -- Use buffer source for `/` (if you enabled `native_menu`, this won't work anymore).
@@ -1223,7 +1245,7 @@ lua <<EOF
   -- Setup lspconfig.
   local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
   -- Replace <YOUR_LSP_SERVER> with each lsp server you've enabled.
-  require('lspconfig')['pylsp'].setup {
+  require('lspconfig').pylsp.setup {
       filetypes = {"python"},
       settings = {
          formatCommand = {"black"}
@@ -1321,6 +1343,132 @@ require("indent_blankline").setup {
     show_end_of_line = false,
     show_current_context = true,
     show_current_context_start = false,
+}
+
+--------------------
+-- tabnine
+-- require('cmp').setup{
+-- sources = {
+--     { name = 'cmp_tabnine' },
+--     }
+-- }
+local tabnine = require('cmp_tabnine.config')
+tabnine:setup({
+	max_lines = 100;
+	max_num_results = 5;
+	sort = true;
+	run_on_every_keystroke = true;
+	snippet_placeholder = '..';
+	ignored_file_types = { -- default is not to ignore
+		-- uncomment to ignore in lua:
+		-- lua = true
+	};
+})
+
+local cb = require'diffview.config'.diffview_callback
+
+require'diffview'.setup {
+  diff_binaries = false,    -- Show diffs for binaries
+  enhanced_diff_hl = false, -- See ':h diffview-config-enhanced_diff_hl'
+  use_icons = true,         -- Requires nvim-web-devicons
+  icons = {                 -- Only applies when use_icons is true.
+    folder_closed = "",
+    folder_open = "",
+  },
+  signs = {
+    fold_closed = "",
+    fold_open = "",
+  },
+  file_panel = {
+    position = "left",                  -- One of 'left', 'right', 'top', 'bottom'
+    width = 35,                         -- Only applies when position is 'left' or 'right'
+    height = 10,                        -- Only applies when position is 'top' or 'bottom'
+    listing_style = "tree",             -- One of 'list' or 'tree'
+    tree_options = {                    -- Only applies when listing_style is 'tree'
+      flatten_dirs = true,              -- Flatten dirs that only contain one single dir
+      folder_statuses = "only_folded",  -- One of 'never', 'only_folded' or 'always'.
+    },
+  },
+  file_history_panel = {
+    position = "bottom",
+    width = 35,
+    height = 16,
+    log_options = {
+      max_count = 256,      -- Limit the number of commits
+      follow = false,       -- Follow renames (only for single file)
+      all = false,          -- Include all refs under 'refs/' including HEAD
+      merges = false,       -- List only merge commits
+      no_merges = false,    -- List no merge commits
+      reverse = false,      -- List commits in reverse order
+    },
+  },
+  default_args = {    -- Default args prepended to the arg-list for the listed commands
+    DiffviewOpen = {},
+    DiffviewFileHistory = {},
+  },
+  hooks = {},         -- See ':h diffview-config-hooks'
+  key_bindings = {
+    disable_defaults = false,                   -- Disable the default key bindings
+    -- The `view` bindings are active in the diff buffers, only when the current
+    -- tabpage is a Diffview.
+    view = {
+      ["<tab>"]      = cb("select_next_entry"),  -- Open the diff for the next file
+      ["<s-tab>"]    = cb("select_prev_entry"),  -- Open the diff for the previous file
+      ["gf"]         = cb("goto_file"),          -- Open the file in a new split in previous tabpage
+      ["<C-w><C-f>"] = cb("goto_file_split"),    -- Open the file in a new split
+      ["<C-w>gf"]    = cb("goto_file_tab"),      -- Open the file in a new tabpage
+      ["<leader>e"]  = cb("focus_files"),        -- Bring focus to the files panel
+      ["<leader>b"]  = cb("toggle_files"),       -- Toggle the files panel.
+    },
+    file_panel = {
+      ["j"]             = cb("next_entry"),           -- Bring the cursor to the next file entry
+      ["<down>"]        = cb("next_entry"),
+      ["k"]             = cb("prev_entry"),           -- Bring the cursor to the previous file entry.
+      ["<up>"]          = cb("prev_entry"),
+      ["<cr>"]          = cb("select_entry"),         -- Open the diff for the selected entry.
+      ["o"]             = cb("select_entry"),
+      ["<2-LeftMouse>"] = cb("select_entry"),
+      ["-"]             = cb("toggle_stage_entry"),   -- Stage / unstage the selected entry.
+      ["S"]             = cb("stage_all"),            -- Stage all entries.
+      ["U"]             = cb("unstage_all"),          -- Unstage all entries.
+      ["X"]             = cb("restore_entry"),        -- Restore entry to the state on the left side.
+      ["R"]             = cb("refresh_files"),        -- Update stats and entries in the file list.
+      ["<tab>"]         = cb("select_next_entry"),
+      ["<s-tab>"]       = cb("select_prev_entry"),
+      ["gf"]            = cb("goto_file"),
+      ["<C-w><C-f>"]    = cb("goto_file_split"),
+      ["<C-w>gf"]       = cb("goto_file_tab"),
+      ["i"]             = cb("listing_style"),        -- Toggle between 'list' and 'tree' views
+      ["f"]             = cb("toggle_flatten_dirs"),  -- Flatten empty subdirectories in tree listing style.
+      ["<leader>e"]     = cb("focus_files"),
+      ["<leader>b"]     = cb("toggle_files"),
+    },
+    file_history_panel = {
+      ["g!"]            = cb("options"),            -- Open the option panel
+      ["<C-A-d>"]       = cb("open_in_diffview"),   -- Open the entry under the cursor in a diffview
+      ["y"]             = cb("copy_hash"),          -- Copy the commit hash of the entry under the cursor
+      ["zR"]            = cb("open_all_folds"),
+      ["zM"]            = cb("close_all_folds"),
+      ["j"]             = cb("next_entry"),
+      ["<down>"]        = cb("next_entry"),
+      ["k"]             = cb("prev_entry"),
+      ["<up>"]          = cb("prev_entry"),
+      ["<cr>"]          = cb("select_entry"),
+      ["o"]             = cb("select_entry"),
+      ["<2-LeftMouse>"] = cb("select_entry"),
+      ["<tab>"]         = cb("select_next_entry"),
+      ["<s-tab>"]       = cb("select_prev_entry"),
+      ["gf"]            = cb("goto_file"),
+      ["<C-w><C-f>"]    = cb("goto_file_split"),
+      ["<C-w>gf"]       = cb("goto_file_tab"),
+      ["<leader>e"]     = cb("focus_files"),
+      ["<leader>b"]     = cb("toggle_files"),
+    },
+    option_panel = {
+      ["<tab>"] = cb("select"),
+      ["q"]     = cb("close"),
+    },
+  },
 }
 EOF
 
