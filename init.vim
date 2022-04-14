@@ -3,7 +3,6 @@ set nocompatible
 " - For Neovim: ~/.local/share/nvim/plugged
 " - Avoid using standard Vim directory names like 'plugin'
 call plug#begin('~/.local/share/nvim/plugged')
-Plug 'https://github.com/scrooloose/nerdtree.git'
 Plug 'https://github.com/majutsushi/tagbar.git'
 Plug 'liuchengxu/vista.vim'
 
@@ -44,7 +43,11 @@ Plug 'OmniSharp/omnisharp-vim'
 Plug 'kkoomen/vim-doge', { 'do': { -> doge#install() } }
 
 Plug 'Eric-Song-Nop/vim-glslx'
-Plug 'puremourning/vimspector'
+Plug 'mfussenegger/nvim-dap'
+Plug 'leoluz/nvim-dap-go'
+Plug 'theHamsta/nvim-dap-virtual-text'
+Plug 'rcarriga/nvim-dap-ui'
+" Plug 'puremourning/vimspector'
 
 
 " Track the engine.
@@ -93,6 +96,7 @@ Plug 'davidgranstrom/nvim-markdown-preview'
 Plug 'mjlbach/neovim-ui'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'sindrets/diffview.nvim'
+Plug 'kyazdani42/nvim-tree.lua'
 " Plug 'TimUntersberger/neogit'
 
 call plug#end()
@@ -206,40 +210,54 @@ function! LoadSession(confirmed)
 endfunction
 nmap <F3> :call LoadSession(0)<CR>
 "}}}
-let g_my_python_debug = {}
+let g_my_runner2files = {}
 function! DebugPython()
     let bname = bufnr()
     let exname = ''
-    if has_key(g:g_my_python_debug, bname)
-        let exname = g:g_my_python_debug[bname]
+    if has_key(g:g_my_runner2files, bname)
+        let exname = g:g_my_runner2files[bname]
     end
     let exname = input('python3 debug:', len(exname) > 0 ? exname : expand('%'), 'file')
-    let g:g_my_python_debug[bname]=exname
-    " eval("let g:g_my_python_debug." . bname . " = exname")
+    let g:g_my_runner2files[bname]=exname
+    " eval("let g:g_my_runner2files." . bname . " = exname")
     vs
     let cmd = "terminal pdbr -c 'b " . expand('%') . ":" . line('.') . "' -c continue " . exname
     " echo 'cmd:' cmd
     exe cmd
 endfunction
 
-function! RunPython()
+function! RunCmdForCurFile()
     let bname = bufnr()
     let exname = ''
-    if has_key(g:g_my_python_debug, bname)
-        let exname = g:g_my_python_debug[bname]
+    if has_key(g:g_my_runner2files, bname)
+        let exname = g:g_my_runner2files[bname]
     end
-    let exname = input('python3 run:', len(exname) > 0 ? exname : expand('%'), 'file')
-    let g:g_my_python_debug[bname]=exname
-    " eval("let g:g_my_python_debug." . bname . " = exname")
+    let ftype2runners = {
+                \ 'go': 'go',
+                \ 'python': 'python3',
+                \ 'sh': 'sh',
+                \}
+    let ft = &filetype
+    let runner = ''
+    if has_key(ftype2runners, ft)
+        let runner = ftype2runners[ft]
+    else
+        echo 'no runner for [' . ft . '] type is not supported yet!'
+        return
+    endif
+
+    let exname = input(runner . ' :', len(exname) > 0 ? exname : expand('%'), 'file')
+    let g:g_my_runner2files[bname]=exname
+    " eval("let g:g_my_runner2files." . bname . " = exname")
     7sp
-    exe 'terminal python3 ' . exname
+    exe 'terminal ' . runner . ' ' . exname
 endfunction
 
 autocmd FileType python set makeprg=python3\ -c\ \"import\ py_compile,sys;\ sys.stderr=sys.stdout;\ py_compile.compile(r'%')\"
 " autocmd FileType python set efm=%C\ %.%#,%A\ \ File\ \"%f\"\\,\ line\ %l%.%#,%Z%[%^\ ]%\\@=%m
 autocmd FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 autocmd FileType python nmap ¡ :call DebugPython()<CR>
-autocmd FileType python nmap ™ :call RunPython()<CR>
+nmap ™ :call RunCmdForCurFile()<CR>
 
 function! Format_Python()
     let filtePattern = [":%s/\\s*:\\s*/:/g", ":%s/(\\s*/(/g", ":%s/\\s*)/)/g", ":%s/[\\s*/[/g", ":%s/\\s*]/]/g", ":%s/{\\s*/{/g", ":%s/\\s*}/}/g", ":%s/\\s*$//g"]
@@ -260,7 +278,10 @@ function! CommentLine()"{{{
     let commtdict = {
                 \ 'lua': '--',
                 \ 'toml': '#',
+                \ 'yaml': '#',
+                \ 'yaml.docker': '#',
                 \ 'java': '//',
+                \ 'go': '//',
                 \ 'c': '//',
                 \ 'cpp': '//',
                 \ 'h': '//',
@@ -639,7 +660,8 @@ endif
 
 """"""""""""""""""""""""""""""for NERDTree"{{{
 " >> auto change current directory to current openning file.
-nnoremap <silent> Tn :let curPath =expand("%:h:p")<Bar> exec "NERDTree " . (len(curPath)<1 ?  "." : curPath)<CR>
+" nnoremap <silent> Tn :let curPath =expand("%:h:p")<Bar> exec "NvimTreeFindFileToggle " . (len(curPath)<1 ?  "." : curPath)<CR>
+nnoremap <silent> Tn :NvimTreeFindFileToggle<CR>
 "}}}
 
 """"""""""""""""""""""""""""""""""""""""""" Vista"{{{
@@ -826,11 +848,11 @@ let g:indent_guides_enable_on_vim_startup = 1
 " autocmd FileType cs nmap <silent> <buffer> Fu <Plug>(omnisharp_find_usages)
 " autocmd FileType cs nmap <silent> <buffer> Ft <Plug>(omnisharp_find_type)
 " autocmd FileType cs nmap <silent> <buffer> Fs <Plug>(omnisharp_find_symbol)
-autocmd FileType cs nmap <silent> <buffer> <leader><space> <Plug>(omnisharp_code_actions)
-autocmd FileType cs nmap <silent> <buffer> Fx <Plug>(omnisharp_fix_usings)
+" autocmd FileType cs nmap <silent> <buffer> <leader><space> <Plug>(omnisharp_code_actions)
+" autocmd FileType cs nmap <silent> <buffer> Fx <Plug>(omnisharp_fix_usings)
 " autocmd FileType cs nmap <silent> <buffer> Fk <Plug>(omnisharp_documentation)
-autocmd FileType cs nmap <silent> <buffer> Fm :OmniSharpCodeFormat<CR>
-autocmd FileType cs nmap <silent> <buffer> Fr <Plug>(omnisharp_rename)
+" autocmd FileType cs nmap <silent> <buffer> Fm :OmniSharpCodeFormat<CR>
+" autocmd FileType cs nmap <silent> <buffer> Fr <Plug>(omnisharp_rename)
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " ALE
 
@@ -940,152 +962,6 @@ endfunction
 set spelllang=en,cjk
 
 
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" COC
-" let g:airline#extensions#coc#enabled = 1
-" if hidden is not set, TextEdit might fail.
-"" set hidden
-"" 
-"" let g:coc_global_extensions=['coc-omnisharp']
-"" 
-"" " Some servers have issues with backup files, see #649
-"" set nobackup
-"" set nowritebackup
-"" 
-"" " Better display for messages
-"" set cmdheight=2
-"" 
-"" " You will have bad experience for diagnostic messages when it's default 4000.
-"" set updatetime=300
-"" 
-"" " don't give |ins-completion-menu| messages.
-"" set shortmess+=c
-"" 
-"" " always show signcolumns
-"" set signcolumn=yes
-"" 
-"" " Use tab for trigger completion with characters ahead and navigate.
-"" " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
-"" inoremap <silent><expr> <TAB>
-""             \ pumvisible() ? "\<C-n>" :
-""             \ <SID>check_back_space() ? "\<TAB>" :
-""             \ coc#refresh()
-"" inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
-"" 
-"" function! s:check_back_space() abort
-""     let col = col('.') - 1
-""     return !col || getline('.')[col - 1]  =~# '\s'
-"" endfunction
-"" 
-"" " Use <c-space> to trigger completion.
-"" inoremap <silent><expr> <c-space> coc#refresh()
-"" 
-"" " Use <cr> to confirm completion, `<C-g>u` means break undo chain at current position.
-"" " Coc only does snippet and additional edit on confirm.
-"" inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
-"" " Or use `complete_info` if your vim support it, like:
-"" " inoremap <expr> <cr> complete_info()["selected"] != "-1" ? "\<C-y>" : "\<C-g>u\<CR>"
-"" 
-"" " Use `[g` and `]g` to navigate diagnostics
-"" nmap <silent> [g <Plug>(coc-diagnostic-prev)
-"" nmap <silent> ]g <Plug>(coc-diagnostic-next)
-"" 
-"" " Remap keys for gotos
-"" nmap <silent> gd <Plug>(coc-definition)
-"" nmap <silent> gy <Plug>(coc-type-definition)
-"" nmap <silent> gi <Plug>(coc-implementation)
-"" nmap <silent> gr <Plug>(coc-references)
-"" 
-"" " Use K to show documentation in preview window
-"" nnoremap <silent> K :call <SID>show_documentation()<CR>
-"" 
-"" function! s:show_documentation()
-""     if (index(['vim','help'], &filetype) >= 0)
-""         execute 'h '.expand('<cword>')
-""     else
-""         call CocAction('doHover')
-""     endif
-"" endfunction
-"" 
-"" " Highlight symbol under cursor on CursorHold
-"" autocmd CursorHold * silent call CocActionAsync('highlight')
-"" 
-"" " Remap for rename current word
-"" nmap Trn <Plug>(coc-rename)
-"" 
-"" " Remap for format selected region
-"" " xmap lf  <Plug>(coc-format-selected)
-"" " nmap lf  <Plug>(coc-format-selected)
-"" 
-"" augroup mygroup
-""     autocmd!
-""     " Setup formatexpr specified filetype(s).
-""     autocmd FileType python,typescript,json setl formatexpr=CocAction('formatSelected')
-""     " Update signature help on jump placeholder
-""     autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
-"" augroup end
-"" 
-"" " Remap for do codeAction of selected region, ex: `laap` for current paragraph
-"" xmap ta  <Plug>(coc-codeaction-selected)
-"" nmap ta  <Plug>(coc-codeaction-selected)
-"" 
-"" " Remap for do codeAction of current line
-"" nmap tac  <Plug>(coc-codeaction)
-"" " Fix autofix problem of current line
-"" nmap tqf  <Plug>(coc-fix-current)
-"" 
-"" " Create mappings for function text object, requires document symbols feature of languageserver.
-"" xmap if <Plug>(coc-funcobj-i)
-"" xmap af <Plug>(coc-funcobj-a)
-"" omap if <Plug>(coc-funcobj-i)
-"" omap af <Plug>(coc-funcobj-a)
-"" 
-"" " Use <C-d> for select selections ranges, needs server support, like: coc-tsserver, coc-python
-"" " nmap <silent> <C-d> <Plug>(coc-range-select)
-"" " xmap <silent> <C-d> <Plug>(coc-range-select)
-"" 
-"" " Use `:Format` to format current buffer
-"" command! -nargs=0 Format :call CocAction('format')
-"" 
-"" " Use `:Fold` to fold current buffer
-"" " command! -nargs=? Fold :call     CocAction('fold', <f-args>)
-"" 
-"" " use `:OR` for organize import of current buffer
-"" command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')
-"" 
-"" " Add status line support, for integration with other plugin, checkout `:h coc-status`
-"" set statusline^=%<%{coc#status()}%{get(b:,'coc_current_function','')}%<
-"" 
-"" " Using CocList
-"" " Show all diagnostics
-"" nnoremap <silent> <space>a  :<C-u>CocList diagnostics<cr>
-"" " Manage extensions
-"" nnoremap <silent> <space>e  :<C-u>CocList extensions<cr>
-"" " Show commands
-"" nnoremap <silent> <space>c  :<C-u>CocList commands<cr>
-"" " Find symbol of current document
-"" nnoremap <silent> <space>o  :<C-u>CocList outline<cr>
-"" " Search workspace symbols
-"" nnoremap <silent> <space>s  :<C-u>CocList -I symbols<cr>
-"" " Do default action for next item.
-"" nnoremap <silent> <space>j  :<C-u>CocNext<CR>
-"" " Do default action for previous item.
-"" nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
-"" " Resume latest coc list
-"" nnoremap <silent> <space>p  :<C-u>CocListResume<CR>
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" inoremap <silent><expr> <TAB>
-            " \ pumvisible() ? coc#_select_confirm() :
-            " \ coc#expandableOrJumpable() ? "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" :
-            " \ <SID>check_back_space() ? "\<TAB>" :
-            " \ coc#refresh()
-
-" function! s:check_back_space() abort
-    " let col = col('.') - 1
-    " return !col || getline('.')[col - 1]  =~# '\s'
-" endfunction
-
-
 function! SetupReHost()
     if writefile([v:servername], '/Users/yuhui/.config/nvim/nvimserver')
         echomsg 'nvim 服务器名称写出失败'
@@ -1172,6 +1048,9 @@ nnoremap <silent> 1gD   <cmd>lua vim.lsp.buf.type_definition()<CR>
 nnoremap <silent> gr    <cmd>lua vim.lsp.buf.references()<CR>
 nnoremap <silent> g0    <cmd>lua vim.lsp.buf.document_symbol()<CR>
 nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
+nnoremap <silent> <leader><space>    <cmd>lua vim.lsp.buf.code_action()<CR>
+nnoremap <silent> Tr    <cmd>lua vim.lsp.buf.renname()<CR>
+nnoremap <silent> <leader>F    <cmd>lua vim.lsp.buf.formatting()<CR>
 " nnoremap <silent> <space>a    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " python 
@@ -1179,7 +1058,7 @@ nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
 " use omni completion provided by lsp
 autocmd Filetype python setlocal omnifunc=v:lua.vim.lsp.omnifunc
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-nnoremap <silent> <leader>fh :DiffviewFileHistory<CR>
+" nnoremap <silent> <leader>fh :DiffviewFileHistory<CR>
 
 set completeopt=menu,menuone,noselect
 lua <<EOF
@@ -1290,6 +1169,24 @@ lua <<EOF
   end,
   cmd = { "/Users/yuhui/work/tool/omnisharp-osx/run", "--languageserver" , "--hostPID", tostring(pid) },
   }
+
+  require('lspconfig').gopls.setup{
+  cmd = {'gopls'},
+  -- for postfix snippets and analyzers
+  capabilities = capabilities,
+  settings = {
+      gopls = {
+          experimentalPostfixCompletions = true,
+          analyses = {
+              unusedparams = true,
+              shadow = true,
+              },
+          staticcheck = true,
+          },
+      },
+  on_attach = on_attach,
+  }
+
 EOF
 """"""""""""""""""""
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -1345,6 +1242,7 @@ require("indent_blankline").setup {
     show_current_context_start = false,
 }
 
+
 --------------------
 -- tabnine
 -- require('cmp').setup{
@@ -1365,6 +1263,17 @@ tabnine:setup({
 	};
 })
 
+require'nvim-tree'.setup{
+  view = {
+    mappings = {
+      list = {
+    --    { key = "<CR>", action = "edit_in_place" }
+      }
+    }
+  } 
+}
+
+-- {{{
 local cb = require'diffview.config'.diffview_callback
 
 require'diffview'.setup {
@@ -1470,5 +1379,154 @@ require'diffview'.setup {
     },
   },
 }
+-- }}}
+
+require("nvim-dap-virtual-text").setup({
+    enabled = true,                     -- enable this plugin (the default)
+    enabled_commands = true,            -- create commands DapVirtualTextEnable, DapVirtualTextDisable, DapVirtualTextToggle, (DapVirtualTextForceRefresh for refreshing when debug adapter did not notify its termination)
+    highlight_changed_variables = true, -- highlight changed values with NvimDapVirtualTextChanged, else always NvimDapVirtualText
+    highlight_new_as_changed = false,   -- highlight new variables in the same way as changed variables (if highlight_changed_variables)
+    show_stop_reason = true,            -- show stop reason when stopped for exceptions
+    commented = false,                  -- prefix virtual text with comment string
+    -- experimental features:
+    virt_text_pos = 'eol',              -- position of virtual text, see `:h nvim_buf_set_extmark()`
+    all_frames = false,                 -- show virtual text for all stack frames not only current. Only works for debugpy on my machine.
+    virt_lines = false,                 -- show virtual lines instead of virtual text (will flicker!)
+    virt_text_win_col = nil             -- position the virtual text at a fixed window column (starting from the first text column) ,
+                                        -- e.g. 80 to position at column 80, see `:h nvim_buf_set_extmark()`
+})
+curgitpath = require('lspconfig.util').find_git_ancestor(vim.loop.fs_realpath('.'))
+if curgitpath == nil or #curgitpath < 1 then
+    curgitpath = "."
+end
+require('dap-go').setup()
+
+local dap = require('dap')
+dap.adapters.go = function(callback, config)
+    local stdout = vim.loop.new_pipe(false)
+    local handle
+    local pid_or_err
+    local port = 38697
+    local opts = {
+      stdio = {nil, stdout},
+      args = {"dap", "-l", "127.0.0.1:" .. port},
+      detached = true
+    }
+    handle, pid_or_err = vim.loop.spawn("dlv", opts, function(code)
+      stdout:close()
+      handle:close()
+      if code ~= 0 then
+        print('dlv exited with code', code)
+      end
+    end)
+    assert(handle, 'Error running dlv: ' .. tostring(pid_or_err))
+    stdout:read_start(function(err, chunk)
+      assert(not err, err)
+      if chunk then
+        vim.schedule(function()
+          require('dap.repl').append(chunk)
+        end)
+      end
+    end)
+    -- Wait for delve to start
+    vim.defer_fn(
+      function()
+        callback({type = "server", host = "127.0.0.1", port = port})
+      end,
+      100)
+end
+-- https://github.com/go-delve/delve/blob/master/Documentation/usage/dlv_dap.md
+-- dap.configurations.go = {
+--     {
+--       type = "go",
+--       name = "Debug",
+--       request = "launch",
+--       program = "${file}"
+--     },
+--     {
+--       type = "go",
+--       name = "Debug test", -- configuration for debugging test files
+--       request = "launch",
+--       mode = "test",
+--       program = "${file}"
+--     },
+--     -- works with go.mod packages and sub packages 
+--     {
+--       type = "go",
+--       name = "Debug test (go.mod)",
+--       request = "launch",
+--       mode = "test",
+--       program = "./${relativeFileDirname}"
+--     } 
+-- }
+
+require("dapui").setup({
+  icons = { expanded = "▾", collapsed = "▸" },
+  mappings = {
+    -- Use a table to apply multiple mappings
+    expand = { "<CR>", "<2-LeftMouse>" },
+    open = "o",
+    remove = "d",
+    edit = "e",
+    repl = "r",
+    toggle = "t",
+  },
+  sidebar = {
+    -- You can change the order of elements in the sidebar
+    elements = {
+      -- Provide as ID strings or tables with "id" and "size" keys
+      {
+        id = "scopes",
+        size = 0.25, -- Can be float or integer > 1
+      },
+      { id = "breakpoints", size = 0.25 },
+      { id = "stacks", size = 0.25 },
+      { id = "watches", size = 00.25 },
+    },
+    size = 40,
+    position = "left", -- Can be "left", "right", "top", "bottom"
+  },
+  tray = {
+    elements = { "repl" },
+    size = 10,
+    position = "bottom", -- Can be "left", "right", "top", "bottom"
+  },
+  floating = {
+    max_height = nil, -- These can be integers or a float between 0 and 1.
+    max_width = nil, -- Floats will be treated as percentage of your screen.
+    border = "single", -- Border style. Can be "single", "double" or "rounded"
+    mappings = {
+      close = { "q", "<Esc>" },
+    },
+  },
+  windows = { indent = 1 },
+})
+
+-- open dap-ui by event.
+local dap, dapui = require("dap"), require("dapui")
+dap.listeners.after.event_initialized["dapui_config"] = function()
+  dapui.open()
+end
+dap.listeners.before.event_terminated["dapui_config"] = function()
+  dapui.close()
+end
+dap.listeners.before.event_exited["dapui_config"] = function()
+  dapui.close()
+end
+
 EOF
+
+""""""""""""""""""""
+" dap
+
+nnoremap <silent> <F5> :lua require'dap'.continue()<CR>
+nnoremap <silent> <F10> :lua require'dap'.step_over()<CR>
+nnoremap <silent> <F11> :lua require'dap'.step_into()<CR>
+nnoremap <silent> <F12> :lua require'dap'.step_out()<CR>
+
+nnoremap <silent> <leader>b :lua require'dap'.toggle_breakpoint()<CR>
+nnoremap <silent> <leader>B :lua require'dap'.set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>
+nnoremap <silent> <leader>lp :lua require'dap'.set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>
+nnoremap <silent> <leader>dr :lua require'dap'.repl.open()<CR>
+nnoremap <silent> <leader>dl :lua require'dap'.run_last()<CR>
 
