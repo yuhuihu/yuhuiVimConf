@@ -4,7 +4,9 @@ set nocompatible
 " - Avoid using standard Vim directory names like 'plugin'
 call plug#begin('~/.local/share/nvim/plugged')
 Plug 'https://github.com/majutsushi/tagbar.git'
-Plug 'liuchengxu/vista.vim'
+" Plug 'liuchengxu/vista.vim'
+Plug 'preservim/nerdtree'
+Plug 'Xuyuanp/nerdtree-git-plugin'
 
 " Plug 'neoclide/coc.nvim', {'branch': 'release'}
 " Plug 'pappasam/coc-jedi', { 'do': 'yarn install --frozen-lockfile && yarn build' }
@@ -22,12 +24,6 @@ Plug 'hrsh7th/nvim-cmp'
 Plug 'hrsh7th/cmp-vsnip'
 Plug 'tzachar/cmp-tabnine', { 'do': './install.sh' }  " tooooooo slow.
 
-" Plug 'ms-jpq/coq.thirdparty', {'branch': '3p'}
-" - shell repl
-" - nvim lua api
-" - scientific calculator
-" - comment banner
-" - etc
 
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
 Plug 'git@github.com:Mizux/vim-colorschemes.git'
@@ -46,7 +42,7 @@ Plug 'Eric-Song-Nop/vim-glslx'
 Plug 'mfussenegger/nvim-dap'
 Plug 'leoluz/nvim-dap-go'
 Plug 'theHamsta/nvim-dap-virtual-text'
-Plug 'rcarriga/nvim-dap-ui'
+" Plug 'rcarriga/nvim-dap-ui'
 " Plug 'puremourning/vimspector'
 
 
@@ -56,7 +52,6 @@ Plug 'hrsh7th/vim-vsnip-integ'
 
 " Plug 'vim-airline/vim-airline'
 " Plug 'vim-airline/vim-airline-themes'
-" Plug 'git@github.com:kyazdani42/nvim-tree.lua.git'   " 0.5
 " Plug 'git@github.com:lukas-reineke/indent-blankline.nvim.git'   " 0.5
 " Plug 'https://github.com/adelarsq/neoline.vim'   " 0.5
 " If you want to have icons in your statusline choose one of these
@@ -74,15 +69,17 @@ Plug 'mileszs/ack.vim'
 Plug 'https://github.com/heavenshell/vim-pydocstring.git'
 
 Plug 'norcalli/nvim-colorizer.lua'
-
+Plug 'wakatime/vim-wakatime'
 Plug 'frazrepo/vim-rainbow'
 
 """color scheme
-Plug 'https://github.com/lifepillar/vim-wwdc17-theme.git'
+Plug 'git@github.com:humanoid-colors/vim-humanoid-colorscheme.git'
+" Plug 'https://github.com/lifepillar/vim-wwdc17-theme.git'
 Plug 'https://github.com/arzg/vim-colors-xcode.git'
-Plug 'ayu-theme/ayu-vim'
+" Plug 'ayu-theme/ayu-vim'
 Plug 'mhartington/oceanic-next'
 Plug 'folke/lsp-colors.nvim'
+Plug 'git@github.com:folke/tokyonight.nvim.git'
 
 
 " with tree-sitter
@@ -96,7 +93,7 @@ Plug 'davidgranstrom/nvim-markdown-preview'
 Plug 'mjlbach/neovim-ui'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'sindrets/diffview.nvim'
-Plug 'kyazdani42/nvim-tree.lua'
+" Plug 'kyazdani42/nvim-tree.lua'
 " Plug 'TimUntersberger/neogit'
 
 call plug#end()
@@ -149,18 +146,19 @@ set shiftwidth=4
 set softtabstop=4
 set nowrap
 set expandtab
+set autoindent
 
 
-set background=dark
+set background=light
 " let ayucolor="light"  " for light version of theme
 " let ayucolor="mirage" " for mirage version of theme
-let ayucolor="dark"   " for dark version of theme
+" let ayucolor="dark"   " for dark version of theme
 " colo ayu
 " colo xcodewwdc
 " colo pencil
 " colo lucario
 " colo slate
-colo nightfly
+colo humanoid
 
 " colo xcodedark
 " colo flattened_light
@@ -211,14 +209,44 @@ endfunction
 nmap <F3> :call LoadSession(0)<CR>
 "}}}
 let g_my_runner2files = {}
+
+function PromotSelectCmd(runner)
+    let bname = bufnr()
+    let opts = []
+    if has_key(g:g_my_runner2files, bname)
+        let opts = g:g_my_runner2files[bname]
+    end
+    let idx = len(opts)
+    if len(opts) > 0
+        let selects = []
+        let ti = 0
+        for tm in opts
+            call add(selects, ti . ".|" . tm)
+            let ti += 1
+        endfor
+        let idx = inputlist(selects + [ len(selects) . '.| <new cmd>'])
+    endif
+
+    let excmd = ""
+    if idx == len(opts)
+        let excmd = input(a:runner . ' :', expand('%'), 'file')
+        call insert(opts, excmd)
+        if len(opts) > 4
+            let didx = len(opts) - 1
+            call remove(opts, didx)
+        end
+        let g:g_my_runner2files[bname]=opts
+    else
+        let idx = idx - 1
+        let excmd = opts[idx]
+        let excmd = input('python3 debug:', len(excmd) > 0 ? excmd : expand('%'), 'file')
+    endif
+    return excmd
+endfunction
+
 function! DebugPython()
     let bname = bufnr()
-    let exname = ''
-    if has_key(g:g_my_runner2files, bname)
-        let exname = g:g_my_runner2files[bname]
-    end
-    let exname = input('python3 debug:', len(exname) > 0 ? exname : expand('%'), 'file')
-    let g:g_my_runner2files[bname]=exname
+    let exname = PromotSelectCmd('pdbr')
     " eval("let g:g_my_runner2files." . bname . " = exname")
     vs
     let cmd = "terminal pdbr -c 'b " . expand('%') . ":" . line('.') . "' -c continue " . exname
@@ -228,10 +256,6 @@ endfunction
 
 function! RunCmdForCurFile()
     let bname = bufnr()
-    let exname = ''
-    if has_key(g:g_my_runner2files, bname)
-        let exname = g:g_my_runner2files[bname]
-    end
     let ftype2runners = {
                 \ 'go': 'go',
                 \ 'python': 'python3',
@@ -246,14 +270,13 @@ function! RunCmdForCurFile()
         return
     endif
 
-    let exname = input(runner . ' :', len(exname) > 0 ? exname : expand('%'), 'file')
-    let g:g_my_runner2files[bname]=exname
-    " eval("let g:g_my_runner2files." . bname . " = exname")
-    7sp
-    exe 'terminal ' . runner . ' ' . exname
+    let excmd =  PromotSelectCmd(runner)
+    " eval("let :g_my_runner2files." . bname . " = exnames")
+    9sp
+    exe 'terminal ' . runner . ' ' . excmd
 endfunction
 
-autocmd FileType python set makeprg=python3\ -c\ \"import\ py_compile,sys;\ sys.stderr=sys.stdout;\ py_compile.compile(r'%')\"
+" autocmd FileType python set makeprg=python3\ -c\ \"import\ py_compile,sys;\ sys.stderr=sys.stdout;\ py_compile.compile(r'%')\"
 " autocmd FileType python set efm=%C\ %.%#,%A\ \ File\ \"%f\"\\,\ line\ %l%.%#,%Z%[%^\ ]%\\@=%m
 autocmd FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 autocmd FileType python nmap ¡ :call DebugPython()<CR>
@@ -607,7 +630,7 @@ function! AddDescription()
             call add(description, '')
         endif
     elseif exfn == 'py'
-        call insert(description, "#!/usr/bin/env python3", 0)
+        call insert(description, "#!/usr/bin/python3", 0)
         call insert(description, "# -*- coding: utf-8 -*-", 1)
     else
 
@@ -660,8 +683,9 @@ endif
 
 """"""""""""""""""""""""""""""for NERDTree"{{{
 " >> auto change current directory to current openning file.
-" nnoremap <silent> Tn :let curPath =expand("%:h:p")<Bar> exec "NvimTreeFindFileToggle " . (len(curPath)<1 ?  "." : curPath)<CR>
-nnoremap <silent> Tn :NvimTreeFindFileToggle<CR>
+nnoremap <silent> Tn :let curPath =expand("%:h:p")<Bar> exec "NERDTree " . (len(curPath)<1 ?  "." : curPath)<CR>
+" let g:nvim_tree_respect_buf_cwd = 1 "0 by default, will change cwd of nvim-tree to that of new buffer's when opening nvim-tree.
+" nnoremap <silent> Tn :NvimTreeToggle<CR>
 "}}}
 
 """"""""""""""""""""""""""""""""""""""""""" Vista"{{{
@@ -971,8 +995,8 @@ command SetUnitEditor call SetupReHost()
 
 function! OpenAndroidLog() 
     exec "vert new"
-    exec "terminal adb logcat '*:S' Unity -v color>~/Downloads/adblog.txt"
-    exec 'read ~/Downloads/adblog.txt'
+    exec "terminal adb logcat '*:S' Unity -v color | tee ~/Downloads/adblog.txt"
+    " exec 'read ~/Downloads/adblog.txt'
     " setlocal buftype=nowrite
     " setlocal noswapfile
     " let cmds = [
@@ -1127,14 +1151,13 @@ lua <<EOF
   require('lspconfig').pylsp.setup {
       filetypes = {"python"},
       settings = {
-         formatCommand = {"black"}
-         -- pyls = { 
-           --   plugins = { 
-             --     pycodestyle =  { enabled = false }, 
-               --   pylint =  { enabled = false }
-                 -- }
-             -- }
-          }
+         formatCommand = {"black"} ,
+         pyls = { 
+             plugins = { 
+                 pylint =  { enabled = true }
+             }
+         }
+         }
   }
   require('lspconfig')['sumneko_lua'].setup {
     settings = {
@@ -1165,8 +1188,8 @@ lua <<EOF
   require'lspconfig'.omnisharp.setup {
       capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities()),
       on_attach = function(_, bufnr)
-      vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
-  end,
+          vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+      end,
   cmd = { "/Users/yuhui/work/tool/omnisharp-osx/run", "--languageserver" , "--hostPID", tostring(pid) },
   }
 
@@ -1184,7 +1207,7 @@ lua <<EOF
           staticcheck = true,
           },
       },
-  on_attach = on_attach,
+      on_attach = on_attach,
   }
 
 EOF
@@ -1263,17 +1286,8 @@ tabnine:setup({
 	};
 })
 
-require'nvim-tree'.setup{
-  view = {
-    mappings = {
-      list = {
-    --    { key = "<CR>", action = "edit_in_place" }
-      }
-    }
-  } 
-}
 
--- {{{
+-- {{{  diffview
 local cb = require'diffview.config'.diffview_callback
 
 require'diffview'.setup {
@@ -1381,21 +1395,7 @@ require'diffview'.setup {
 }
 -- }}}
 
-require("nvim-dap-virtual-text").setup({
-    enabled = true,                     -- enable this plugin (the default)
-    enabled_commands = true,            -- create commands DapVirtualTextEnable, DapVirtualTextDisable, DapVirtualTextToggle, (DapVirtualTextForceRefresh for refreshing when debug adapter did not notify its termination)
-    highlight_changed_variables = true, -- highlight changed values with NvimDapVirtualTextChanged, else always NvimDapVirtualText
-    highlight_new_as_changed = false,   -- highlight new variables in the same way as changed variables (if highlight_changed_variables)
-    show_stop_reason = true,            -- show stop reason when stopped for exceptions
-    commented = false,                  -- prefix virtual text with comment string
-    -- experimental features:
-    virt_text_pos = 'eol',              -- position of virtual text, see `:h nvim_buf_set_extmark()`
-    all_frames = false,                 -- show virtual text for all stack frames not only current. Only works for debugpy on my machine.
-    virt_lines = false,                 -- show virtual lines instead of virtual text (will flicker!)
-    virt_text_win_col = nil             -- position the virtual text at a fixed window column (starting from the first text column) ,
-                                        -- e.g. 80 to position at column 80, see `:h nvim_buf_set_extmark()`
-})
-curgitpath = require('lspconfig.util').find_git_ancestor(vim.loop.fs_realpath('.'))
+local curgitpath = require('lspconfig.util').find_git_ancestor(vim.loop.fs_realpath('.'))
 if curgitpath == nil or #curgitpath < 1 then
     curgitpath = "."
 end
@@ -1435,85 +1435,23 @@ dap.adapters.go = function(callback, config)
       end,
       100)
 end
--- https://github.com/go-delve/delve/blob/master/Documentation/usage/dlv_dap.md
--- dap.configurations.go = {
---     {
---       type = "go",
---       name = "Debug",
---       request = "launch",
---       program = "${file}"
---     },
---     {
---       type = "go",
---       name = "Debug test", -- configuration for debugging test files
---       request = "launch",
---       mode = "test",
---       program = "${file}"
---     },
---     -- works with go.mod packages and sub packages 
---     {
---       type = "go",
---       name = "Debug test (go.mod)",
---       request = "launch",
---       mode = "test",
---       program = "./${relativeFileDirname}"
---     } 
--- }
 
-require("dapui").setup({
-  icons = { expanded = "▾", collapsed = "▸" },
-  mappings = {
-    -- Use a table to apply multiple mappings
-    expand = { "<CR>", "<2-LeftMouse>" },
-    open = "o",
-    remove = "d",
-    edit = "e",
-    repl = "r",
-    toggle = "t",
-  },
-  sidebar = {
-    -- You can change the order of elements in the sidebar
-    elements = {
-      -- Provide as ID strings or tables with "id" and "size" keys
-      {
-        id = "scopes",
-        size = 0.25, -- Can be float or integer > 1
-      },
-      { id = "breakpoints", size = 0.25 },
-      { id = "stacks", size = 0.25 },
-      { id = "watches", size = 00.25 },
-    },
-    size = 40,
-    position = "left", -- Can be "left", "right", "top", "bottom"
-  },
-  tray = {
-    elements = { "repl" },
-    size = 10,
-    position = "bottom", -- Can be "left", "right", "top", "bottom"
-  },
-  floating = {
-    max_height = nil, -- These can be integers or a float between 0 and 1.
-    max_width = nil, -- Floats will be treated as percentage of your screen.
-    border = "single", -- Border style. Can be "single", "double" or "rounded"
-    mappings = {
-      close = { "q", "<Esc>" },
-    },
-  },
-  windows = { indent = 1 },
+require("nvim-dap-virtual-text").setup({
+    enabled = true,                     -- enable this plugin (the default)
+    enabled_commands = true,            -- create commands DapVirtualTextEnable, DapVirtualTextDisable, DapVirtualTextToggle, (DapVirtualTextForceRefresh for refreshing when debug adapter did not notify its termination)
+    highlight_changed_variables = true, -- highlight changed values with NvimDapVirtualTextChanged, else always NvimDapVirtualText
+    highlight_new_as_changed = false,   -- highlight new variables in the same way as changed variables (if highlight_changed_variables)
+    show_stop_reason = true,            -- show stop reason when stopped for exceptions
+    commented = false,                  -- prefix virtual text with comment string
+    -- experimental features:
+    virt_text_pos = 'eol',              -- position of virtual text, see `:h nvim_buf_set_extmark()`
+    all_frames = false,                 -- show virtual text for all stack frames not only current. Only works for debugpy on my machine.
+    virt_lines = false,                 -- show virtual lines instead of virtual text (will flicker!)
+    virt_text_win_col = nil             -- position the virtual text at a fixed window column (starting from the first text column) ,
+                                        -- e.g. 80 to position at column 80, see `:h nvim_buf_set_extmark()`
 })
 
--- open dap-ui by event.
-local dap, dapui = require("dap"), require("dapui")
-dap.listeners.after.event_initialized["dapui_config"] = function()
-  dapui.open()
-end
-dap.listeners.before.event_terminated["dapui_config"] = function()
-  dapui.close()
-end
-dap.listeners.before.event_exited["dapui_config"] = function()
-  dapui.close()
-end
-
+dap.set_log_level('DEBUG')
 EOF
 
 """"""""""""""""""""

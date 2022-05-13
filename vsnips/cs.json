@@ -38,6 +38,24 @@
         "body":[
             "<color=white>$TM_SELECTED_TEXT</color>"
         ]
+    },
+    "new unity class":{
+        "prefix": "new gclass",
+        "body": [
+            "using UnityEngine;",
+            "using System;",
+            "",
+            "using glad;",
+            "${1}",
+            "namespace glad.gtc {",
+                "",
+                "   public class ${2}: ${3}",
+                "   {",
+                    "",
+                    "   }",
+                    "",
+                    "}"
+        ]
     }
 
 }
